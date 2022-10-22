@@ -12,7 +12,7 @@ import pygame
 __all__ = ["button", "label", "slider", "textbox", "themes", "globs", "colors", "States"]
 
 
-print(f"buttonup {constants._VERSION}")
+print(f"buttonup {constants.VERSION}")
 
 if not pygame.get_init():
     pygame.init()
