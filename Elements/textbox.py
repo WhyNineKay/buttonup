@@ -1,10 +1,9 @@
-from buttonup.Utility.program_tools import check_tools
-from buttonup.Utility.globs import globs
-from buttonup.Elements import element
-from buttonup.Themes import themes
-from buttonup import constants as c
-import pygame
+from .. Utility.program_tools import check_tools
+from .. Utility.globs import globs
+from .. Elements import element
+from .. Themes import themes
 
+import pygame
 
 
 class DefaultTextBox(element.Element):
@@ -78,12 +77,10 @@ class DefaultTextBox(element.Element):
         else:
             raise ValueError("antialiasing argument must be of type <bool>.")
 
-
         if check_tools.is_num(line_spacing):
             self._line_spacing = int(line_spacing)
         else:
             raise ValueError("line_spacing argument must be of type <int> or <float>.")
-
 
         if check_tools.is_num(margin_from_left):
             self._margin_from_left = int(margin_from_left)
@@ -100,7 +97,6 @@ class DefaultTextBox(element.Element):
         else:
             raise ValueError("margin arguments must be of type <int> or <float>.")
 
-
         if not check_tools.is_num(rounded_corners_amount) and rounded_corners_amount is not None:
             raise ValueError("rounded_corners_amount must be of type <int> or <float>.")
 
@@ -110,7 +106,6 @@ class DefaultTextBox(element.Element):
             self._rounded_corners_amount = -1
         else:
             self._rounded_corners_amount = int(rounded_corners_amount)
-
 
         self._create_colors()
 
@@ -183,7 +178,6 @@ class DefaultTextBox(element.Element):
         text += current_line + "\n"
 
         self._processed_text = text
-
 
     def update(self, dt: float) -> None:
         pass

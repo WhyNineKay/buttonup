@@ -1,5 +1,5 @@
-from buttonup.Utility import errors
-from buttonup import constants
+from .. Utility import errors
+from .. import constants as c
 import logging
 import json
 import sys

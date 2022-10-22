@@ -1,12 +1,12 @@
-from buttonup.Utility.program_tools import check_tools, color_tools
-from buttonup.Elements.element import Element
-from buttonup.Utility.globs import globs
-from buttonup.Elements import button
-from buttonup.Themes import themes
-from buttonup import constants
+from ..Utility.program_tools import check_tools, color_tools
+from ..Elements.element import Element
+from ..Utility.globs import globs
+from ..Elements import button
+from ..Themes import themes
+from .. import constants as c
+
 import logging
 import pygame
-
 
 log = logging.getLogger(__name__)
 
@@ -119,7 +119,6 @@ class DefaultSlider(Element):
 
         self._create_colors()
 
-
     def _create_colors(self) -> None:
         self._color_rail = color_tools.change_hex_brightness(self._theme.surface,
                                                              self._theme.brightness_offsets["slider-rail"])
@@ -135,7 +134,7 @@ class DefaultSlider(Element):
 
         self._slider_button.update(dt)
 
-        if self._slider_button.state == constants.STATE_PRESSED:
+        if self._slider_button.state == c.STATE_PRESSED:
             self._held = True
         elif not mouse_keys[0]:
             self._held = False
@@ -147,10 +146,9 @@ class DefaultSlider(Element):
             elif mouse_pos[0] > self._slider_button.x + self._slider_size / 2 and self._moved_direction == "right":
                 self._dont_move = False
 
-
         if self._held:
 
-            self._slider_button.state = constants.STATE_PRESSED
+            self._slider_button.state = c.STATE_PRESSED
 
             if not self._dont_move:
                 if mouse_pos[0] < self._pos_x:
@@ -194,7 +192,7 @@ class DefaultSlider(Element):
         move_amount = 1
 
         if event.type == pygame.KEYDOWN:
-            if self._slider_button.state == constants.STATE_PRESSED:
+            if self._slider_button.state == c.STATE_PRESSED:
                 if event.key == pygame.K_RIGHT:
                     if not self._slider_button.x + self._slider_size + move_amount > self._pos_x + self._rail_width:
                         self._slider_button.x += move_amount
@@ -215,7 +213,6 @@ class DefaultSlider(Element):
                         self._dont_move = True
 
                     self._moved_direction = 'left'
-
 
     @property
     def value(self) -> float:
@@ -240,7 +237,6 @@ class DefaultSlider(Element):
             raise ValueError("value argument must be of type <float>.")
 
         self._slider_button.x = self._pos_x + (self._rail_width - self._slider_size) * value
-
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -335,4 +331,3 @@ class DefaultSlider(Element):
 
         self._create_colors()
         self._slider_button.theme = theme
-

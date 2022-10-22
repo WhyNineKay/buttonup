@@ -2,13 +2,14 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from buttonup import constants
-from buttonup.Elements.element import Element
-from buttonup.Utility.program_tools import check_tools, color_tools
-from buttonup.Utility.globs import globs
-from buttonup.Themes import themes
+from .. Elements.element import Element
+from .. Utility.program_tools import check_tools, color_tools
+from .. Utility.globs import globs
+from .. Themes import themes
+from .. Tools import colors
+from .. import constants
+
 import pygame
-from buttonup.Tools import colors
 
 
 class DefaultLabel(Element):

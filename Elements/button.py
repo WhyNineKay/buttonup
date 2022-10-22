@@ -1,11 +1,9 @@
-import constants
-from buttonup.Utility.program_tools import color_tools, text_align, check_tools
-from buttonup.Utility import program_tools
+from .. Utility.program_tools import color_tools, text_align, check_tools
+from .. Utility.globs import globs
+from .. Themes import themes
+from .. Elements.element import Element
 from typing import Callable, Any
-from buttonup.Utility.globs import globs
-from buttonup.Themes import themes
-from buttonup.Elements.element import Element
-import buttonup.constants as c
+from .. import constants as c
 import pygame
 
 
@@ -83,7 +81,7 @@ class DefaultButton(Element):
             raise ValueError("size values must be of type <int> or <float>.")
 
         if text is None:
-            self._text = constants.DEFAULT_TEXT
+            self._text = c.DEFAULT_TEXT
         elif check_tools.is_str(text):
             self._text = str(text)
         else:

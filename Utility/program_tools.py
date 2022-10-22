@@ -2,10 +2,8 @@
 This file holds all the necessary tools for the program.
 """
 import colorsys
-from typing import Any
-
 import pygame
-import random
+from typing import Any
 
 
 def empty_function():
@@ -21,13 +19,6 @@ def make_positive(val: float | int) -> float | int:
 
 
 class CheckTools:
-
-    @staticmethod
-    def is_default(case: Any) -> bool:
-        """
-
-        """
-        return True
 
     @staticmethod
     def is_num(case: Any) -> bool:

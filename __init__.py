@@ -1,13 +1,12 @@
-from buttonup.constants import *
-from buttonup.Elements import button
-from buttonup.Elements import label
-from buttonup.Elements import slider
-from buttonup.Elements import textbox
-from buttonup.Elements import tooltip
-from buttonup.Themes import themes
-from buttonup.Utility.globs import globs
-from buttonup.Tools import colors
-from buttonup.Tools import colors
+from .Elements import button
+from .Elements import label
+from .Elements import slider
+from .Elements import textbox
+from .Themes import themes
+from .Utility.globs import globs
+from .Tools import colors
+
+from .constants import *
 import pygame
 
 print(f"buttonup {constants._VERSION}")

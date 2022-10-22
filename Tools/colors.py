@@ -4,8 +4,8 @@ Colors for colored labels
 
 from typing import Any
 
-from buttonup.Utility.program_tools import check_tools, color_tools
-from buttonup import constants
+from .. Utility.program_tools import check_tools, color_tools
+from .. import constants as c
 
 
 class ColorPalette:
@@ -27,7 +27,7 @@ class ColorPalette:
         if not check_tools.is_str(keyword):
             raise ValueError("keyword argument must be of type <str>.")
 
-        if color == constants.COLOR_RESET:
+        if color == c.COLOR_RESET:
             self._keyword_color_dict[keyword] = color
 
         elif not color_tools.is_color(color):
@@ -48,7 +48,7 @@ class ColorPalette:
         :raises ValueError: If the keyword argument is invalid.
         """
 
-        self.add_color(keyword, constants.COLOR_RESET)
+        self.add_color(keyword, c.COLOR_RESET)
 
     def get_color(self, keyword: str) -> Any:
         """

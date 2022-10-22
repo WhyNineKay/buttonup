@@ -1,4 +1,4 @@
-from buttonup.Themes import themes
+from .. Themes import themes
 
 
 class Globs:
