@@ -134,7 +134,7 @@ class DefaultSlider(Element):
 
         self._slider_button.update(dt)
 
-        if self._slider_button.state == c.STATE_PRESSED:
+        if self._slider_button.state == c.States.PRESSED:
             self._held = True
         elif not mouse_keys[0]:
             self._held = False
@@ -148,7 +148,7 @@ class DefaultSlider(Element):
 
         if self._held:
 
-            self._slider_button.state = c.STATE_PRESSED
+            self._slider_button.state = c.States.PRESSED
 
             if not self._dont_move:
                 if mouse_pos[0] < self._pos_x:
@@ -192,7 +192,7 @@ class DefaultSlider(Element):
         move_amount = 1
 
         if event.type == pygame.KEYDOWN:
-            if self._slider_button.state == c.STATE_PRESSED:
+            if self._slider_button.state == c.States.PRESSED:
                 if event.key == pygame.K_RIGHT:
                     if not self._slider_button.x + self._slider_size + move_amount > self._pos_x + self._rail_width:
                         self._slider_button.x += move_amount
@@ -202,7 +202,6 @@ class DefaultSlider(Element):
                         self._dont_move = True
 
                     self._moved_direction = 'right'
-
 
                 elif event.key == pygame.K_LEFT:
                     if not self._slider_button.x - move_amount < self._pos_x:

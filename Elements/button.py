@@ -163,7 +163,7 @@ class DefaultButton(Element):
 
         self._prev_pressed = False
         self._changed_cursor = False
-        self._state = c.STATE_INACTIVE
+        self._state = c.States.INACTIVE
 
         # Create colors.
         self._create_colors()
@@ -203,7 +203,7 @@ class DefaultButton(Element):
         """Draw to the pygame surface."""
 
         # If the button is disabled, draw the disabled color.
-        if self._state == c.STATE_DISABLED:
+        if self._state == c.States.DISABLED:
             if self._color_disabled is not None:
                 pygame.draw.rect(screen, self._color_disabled, self._rect, border_radius=self._rounded_corners_amount)
 
@@ -215,7 +215,7 @@ class DefaultButton(Element):
                 screen.blit(self._text_surface, self._text_rect)
 
         # If the button is not disabled, draw the normal color.
-        elif self._state == c.STATE_PRESSED:
+        elif self._state == c.States.PRESSED:
             if self._color_pressed is not None:
                 pygame.draw.rect(screen, self._color_pressed, self._rect, border_radius=self._rounded_corners_amount)
 
@@ -226,7 +226,7 @@ class DefaultButton(Element):
                 # Blit to the screen
                 screen.blit(self._text_surface, self._text_rect)
 
-        elif self._state == c.STATE_HOVERED:
+        elif self._state == c.States.HOVERED:
             if self._color_hovered is not None:
                 pygame.draw.rect(screen, self._color_hovered, self._rect, border_radius=self._rounded_corners_amount)
 
@@ -260,33 +260,33 @@ class DefaultButton(Element):
         :param dt: Delta Time.
         """
 
-        self._prev_pressed = self._state == c.STATE_PRESSED
+        self._prev_pressed = self._state == c.States.PRESSED
 
         mouse_pos = pygame.mouse.get_pos()
         mouse_keys = pygame.mouse.get_pressed()
 
-        if self._state != c.STATE_DISABLED:
+        if self._state != c.States.DISABLED:
 
             if self._rect.collidepoint(mouse_pos):
                 if mouse_keys[0]:
-                    if not self._state == c.STATE_HOVERED:
+                    if not self._state == c.States.HOVERED:
                         if not self._prev_pressed:
-                            self._state = c.STATE_INACTIVE
+                            self._state = c.States.INACTIVE
                         else:
-                            self._state = c.STATE_PRESSED
+                            self._state = c.States.PRESSED
                     else:
-                        self._state = c.STATE_PRESSED
+                        self._state = c.States.PRESSED
                 else:
-                    self._state = c.STATE_HOVERED
+                    self._state = c.States.HOVERED
 
             else:
-                self._state = c.STATE_INACTIVE
+                self._state = c.States.INACTIVE
         else:
-            self.state = c.STATE_DISABLED
+            self.state = c.States.DISABLED
 
         self._change_cursor()
 
-        if self._state == c.STATE_PRESSED and not self._prev_pressed and self._on_click_function is not None:
+        if self._state == c.States.PRESSED and not self._prev_pressed and self._on_click_function is not None:
             self._on_click_function()
 
     def _change_cursor(self) -> None:
@@ -297,11 +297,11 @@ class DefaultButton(Element):
 
         mouse_pos = pygame.mouse.get_pos()
 
-        if self._state == c.STATE_DISABLED and self._rect.collidepoint(mouse_pos) and self._on_disabled_change_cursor:
+        if self._state == c.States.DISABLED and self._rect.collidepoint(mouse_pos) and self._on_disabled_change_cursor:
             pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_NO)
             self._changed_cursor = True
 
-        elif (self._state == c.STATE_HOVERED or self._state == c.STATE_PRESSED) and self._on_hover_change_cursor:
+        elif (self._state == c.States.HOVERED or self._state == c.States.PRESSED) and self._on_hover_change_cursor:
             pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
             self._changed_cursor = True
 
@@ -372,31 +372,33 @@ class DefaultButton(Element):
             self._on_click_function = value
 
     @property
-    def state(self) -> str:
+    def state(self) -> c.States:
         """
         Gets the current state of the button.
-        Return states: ["inactive", "hovered", "pressed", "disabled"]
         :returns state: Returns the worded string representation of the state.
         """
         return self._state
 
     @state.setter
-    def state(self, state: str) -> None:
+    def state(self, state: str | c.States) -> None:
         """
-        Set the state of the button. Use from the constants.states
+        Set the state of the button. Use from buttonup.States.<state>
 
-        :param state: The requested state. Must be one of: ["disabled", "hovered", "pressed", "inactive"]
+        :param state: The requested state. Must be one of: ["disabled", "hovered", "pressed", "inactive"] or a state
+            from buttonup.States.
         :raises ValueError: If the state is none of the possible states.
         """
 
-        states = ["disabled", "hovered", "pressed", "inactive"]
-
-        state = state.lower()
-
-        if state in states:
+        if isinstance(state, str):
+            if state in c.States.__members__:
+                self._state = c.States[state]
+            else:
+                raise ValueError("state must be one of: ['disabled', 'hovered', 'pressed', 'inactive'] or a state from "
+                                 "buttonup.States.")
+        elif isinstance(state, c.States):
             self._state = state
-        else:
-            raise ValueError("state is not valid.")
+
+
 
     @staticmethod
     def _default_on_click_function() -> None:
@@ -499,7 +501,7 @@ class DefaultButton(Element):
     @property
     def antialiasing(self) -> bool:
         """
-        Get whether the text is antialiased.
+        Get whether the text is anti aliased.
         """
         return self._antialiasing
 

@@ -1,6 +1,13 @@
 import buttonup
+import constants
 import pygame
 import time
+
+
+LARGE_SENTENCE = "Don't step on the broken glass. He poured rocks in the dungeon of his mind. " \
+                 "The clouds formed beautiful animals in the sky that eventually created a tornado to wreak havoc." \
+                 " Everyone was busy, so I went to the movie alone."
+
 
 
 class Test:
@@ -19,7 +26,10 @@ class Test:
         self.button_1 = buttonup.button.DefaultButton(100, 100, width=130, height=80, text="add 0.1",
                                                       on_click_function=self.increase_slider_pos)
         self.button_2 = buttonup.button.DefaultButton(100, 200, width=130, height=40, text="2")
-        self.button_2.state = "disabled"
+
+        #self.button_2.state = constants.States.DISABLED
+        self.button_2.state = "DISABLED"
+
         self.button_3 = buttonup.button.DefaultButton(100, 300, width=150, height=150, text="3", text_align_x="left",
                                                       text_align_y="top")
         self.button_4 = buttonup.button.DefaultButton(300, 100, width=40, height=130, text="4")
@@ -37,7 +47,7 @@ class Test:
         self.label_2 = buttonup.label.DefaultLabel(215, 337, text="0.0", text_size=15)
 
         self.textbox_1 = buttonup.textbox.DefaultTextBox(700, 100, width=450, height=300, text_size=20,
-                                                         text=buttonup.Utility.testvars.text_large_sentences,
+                                                         text=LARGE_SENTENCE,
                                                          rounded_corners_amount=18)
 
         color_palette = buttonup.Tools.colors.ColorPalette()
@@ -60,7 +70,7 @@ class Test:
         for e in self.elements:
             e.update(self.dt)
 
-        self.button_3.text = self.button_3.state
+        self.button_3.text = str(self.button_3.state.value.capitalize())
         self.label_1.text = "{:10.3f}".format(self.slider_1.value)
         self.label_2.text = "{:10.3f}".format(self.slider_2.value)
 
