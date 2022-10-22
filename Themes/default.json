@@ -1,0 +1,25 @@
+{
+  "primary": "#6200EE",
+  "primary-variant": "#3700B3",
+  "secondary": "#03DAC6",
+  "secondary-variant": "#018786",
+  "background": "#111111",
+  "surface": "#1c1c1c",
+  "error": "#CF6679",
+  "on-primary": "#000000",
+  "on-secondary": "#000000",
+  "on-background": "#FFFFFF",
+  "on-surface": "#FFFFFF",
+  "on-error": "#000000",
+  "brightness-offsets": {
+    "pressed": -3,
+    "hovered": 3,
+    "hovered-outline": 10,
+    "disabled": -3,
+    "disabled-text": -60,
+    "slider-rail": 10
+  },
+  "info": {
+    "credits": "https://material.io/design/color/dark-theme.html#ui-application"
+  }
+}
