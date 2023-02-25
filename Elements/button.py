@@ -1,258 +1,418 @@
-from .. Utility.program_tools import color_tools, text_align, check_tools
-from .. Utility.globs import globs
-from .. Themes import themes
-from .. Elements.element import Element
-from typing import Callable, Any
-from .. import constants as c
+import logging
+from typing import Callable, Union, Tuple, Any
+
 import pygame
+from ..Themes.themes import Theme
+from .. import constants as c
+from ..Elements.element import NewElement
+from ..Themes import themes
+from ..Utility.program_tools import check_tools, text_align, color_tools
+
+log = logging.getLogger(__name__)
 
 
-class DefaultButton(Element):
-    def __init__(self,
-                 pos_x: int,
-                 pos_y: int,
-                 width: int = None,
-                 height: int = None,
-                 theme: themes.Theme = None,
-                 text: str = None,
-                 text_size: int = None,
-                 font: str = None,
-                 text_align_x: str = "center",
-                 text_align_y: str = "center",
-                 text_align_margin: int = 15,
-                 antialiasing: bool = True,
-                 rounded_corners_amount: int = None,
-                 on_click_function: None or Callable = None,
-                 on_hover_change_cursor: bool = True,
-                 on_disabled_change_cursor: bool = False) -> None:
+class DefaultButton(NewElement):
+    def __init__(self, pos_x: int, pos_y: int, width: int = None, height: int = None,
+                 theme: Union[themes.Theme, str] = None, text: str = None, text_size: int = None,
+                 font: Union[pygame.font.Font, str] = None, text_antialiasing: bool = None,
+                 text_alignment_x: c.Alignments = None, text_alignment_y: c.Alignments = None,
+                 text_alignment_margin: int = None, border_radius: int = None,
+                 border_width: int = None, on_click_function: Callable = None,
+                 on_click_function_args: list | tuple = None, on_click_function_kwargs: dict = None,
+                 on_hover_function: Callable = None, on_hover_function_args: list | tuple = None,
+                 on_hover_function_kwargs: dict = None, cursor_change_hover: bool = None) -> None:
         """
-        A button that can be clicked and has a text on it.
-        :param pos_x: The x position of the button.
-        :param pos_y: The y position of the button.
-        :param width: The width of the button.
-        :param height: The height of the button.
-        :param theme: Theme object. Defaults to globs.project_theme.
-        :param text: The text on the button.
-        :param text_size: The size of the text.
-        :param text_align_x: The x position of the text. ("left", "center", "right")
-        :param text_align_y: The y position of the text. ("top", "center", "bottom")
-        :param text_align_margin: The margin between the text and the button.
-        :param rounded_corners_amount: Rounded corners amount. Set to -1 for no roundness, or any integer greater
-                                       than 1 for rounded corners. If set to None it will calculate rounded corners
-                                       amount automatically from width and height.
-        :param on_click_function: The function to call when the button is clicked.
-        :param on_hover_change_cursor: If the cursor should change when the mouse is hovering over the button.
-        :param on_disabled_change_cursor: If the cursor should change when the button is disabled.
-        :raises ValueError: If any of the parameters are not the correct type or specification.
+        The new version of the buttonup default button.
+
+        A simple button that when clicked, will do something!
+
+        :param pos_x: The integer x position of the button in pixels.
+        :param pos_y: The integer y position of the button in pixels.
+        :param width: The width of the button in pixels, defaults to 100.
+        :param height: The height of the button in pixels, defaults to 40.
+
+        :param theme: The theme of the button, defaults to the current project theme. (globs.project_theme)
+        :param text: The text that is displayed on the button. It is entirely optional, if you wish to use an
+            image instead. Defaults to an empty string ('').
+
+        :param text_size: The size of the text in pixels, defaults to 20.
+        :param font: The font of the text. Defaults to the specified theme's font.
+        :param text_antialiasing: Choose whether the text is anti-aliased. Defaults to True.
+
+        :param text_alignment_x: The alignment of the text on the button in the x direction. Defaults to
+            Alignments.CENTER.
+
+        :param text_alignment_y: The alignment of the text on the button in the y direction. Defaults to
+            Alignments.CENTER.
+
+        :param text_alignment_margin: The margin of the text in pixels, from the top-left of the button.
+            Defaults to 10.
+
+        :param border_radius: How much the corners are rounded on the button, in pixels. If set to 0, The corners
+            will be square and sharp. Any integer above 0, the corners will be rounded. Defaults to 0.
+
+        :param border_width: The width of the border of the button, in pixels. Defaults to 0.
+
+        :param on_click_function: The function to be called when the button is clicked. Defaults to None.
+        :param on_click_function_args: The args to put into the on_click_function when called. Defaults to [].
+        :param on_click_function_kwargs: The kwargs to put into the on_click_function when called. Defaults to {}.
+        :param on_hover_function: The function to be called when the button is hovered. Defaults to None.
+        :param on_hover_function_args: The args to put into the on_hover_function when called. Defaults to [].
+        :param on_hover_function_kwargs: The kwargs to put into the on_hover_function when called. Defaults to {}.
+
+        :param cursor_change_hover: Sets whether when you hover your mouse over the button, it sets your cursor
+            to the pointer hand.
+
+        :raises TypeError: If any of the arguments do not meet the required type.
+        :raises ValueError: If any of the arguments are not of the required value.
         """
 
+        # -------- POSITION
         super().__init__()
+        if not check_tools.is_int(pos_x):
+            try:
+                pos_x = int(pos_x)
+            except ValueError:
+                raise TypeError(f"pos_x must be of type int, not '{type(pos_x)}'.")
+            else:
+                pass
 
-        # Perform type checks for all the arguments
+        self._pos_x = pos_x
 
-        self._color_hovered_outline = None
-        self._color_disabled_text = None
-        self._color_disabled = None
-        self._color_pressed = None
-        self._color_hovered = None
+        if not check_tools.is_int(pos_y):
+            try:
+                pos_y = int(pos_y)
+            except ValueError:
+                raise TypeError(f"pos_y must be of type int, not '{type(pos_y)}'.")
+            else:
+                pass
 
-        if check_tools.is_num(pos_x):
-            self._pos_x = int(pos_x)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
+        self._pos_y = pos_y
 
-        if check_tools.is_num(pos_y):
-            self._pos_y = int(pos_y)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
+        # -------- GEOMETRY
 
         if width is None:
-            self._width = 75
-        elif check_tools.is_num(width):
-            self._width = int(width)
+            width = 100
         else:
-            raise ValueError("size values must be of type <int> or <float>.")
+            if not check_tools.is_int(width):
+                try:
+                    width = int(width)
+                except ValueError:
+                    raise TypeError(f"width must be of type int, not '{type(width)}'.")
+                else:
+                    pass
+
+        self._width = width
 
         if height is None:
-            self._height = 75
-        elif check_tools.is_num(height):
-            self._height = int(height)
+            height = 40
         else:
-            raise ValueError("size values must be of type <int> or <float>.")
+            if not check_tools.is_int(height):
+                try:
+                    height = int(height)
+                except ValueError:
+                    raise TypeError(f"height must be of type int, not '{type(height)}'.")
+                else:
+                    pass
 
-        if text is None:
-            self._text = c.DEFAULT_TEXT
-        elif check_tools.is_str(text):
-            self._text = str(text)
-        else:
-            raise ValueError("text argument must be of type <str>.")
+        self._height = height
+
+        # -------- THEME
 
         if theme is None:
-            self._theme = globs.project_theme
-        elif isinstance(theme, themes.Theme):
-            self._theme = theme
+            theme = themes.get_default_theme()
         elif isinstance(theme, str):
-            self._theme = themes.get_theme(str(theme))
+            if theme in themes.get_all_themes():
+                theme = themes.get_theme(theme)
+            else:
+                raise ValueError(f"theme '{theme}' does not exist.")
         else:
-            raise ValueError("theme argument must be of type <str> or <Theme>.")
+            if not isinstance(theme, themes.Theme):
+                raise TypeError(f"theme must be of type themes.Theme or str, not '{type(theme)}'.")
+
+        self._theme = theme
+
+        # -------- TEXT
+
+        if text is None:
+            text = ""
+        else:
+            if not check_tools.is_str(text):
+                raise TypeError(f"text must be of type str, not '{type(text)}'.")
+
+        self._text = text
 
         if text_size is None:
-            self._text_size = 20
-        elif check_tools.is_negative(text_size):
-            raise ValueError("text_size argument must be a positive int.")
-        elif check_tools.is_num(text_size):
-            self._text_size = int(text_size)
+            text_size = 20
         else:
-            raise ValueError("text_size argument must be of type <int> or <float>.")
+            if not check_tools.is_int(text_size):
+                try:
+                    text_size = int(text_size)
+                except ValueError:
+                    raise TypeError(f"text_size must be of type int, not '{type(text_size)}'.")
+                else:
+                    pass
 
-        if not check_tools.is_str(text_align_x):
-            raise ValueError("text_align arguments must be of type <str>.")
+        self._text_size = text_size
 
-        if not check_tools.is_str(text_align_y):
-            raise ValueError("text_align arguments must be of type <str>.")
-
-        if check_tools.is_num(text_align_margin):
-            if text_align_margin < 0:
-                raise ValueError("text_align_margin must be greater than 0. (x > 0)")
-            self._text_align_margin = int(text_align_margin)
-        else:
-            raise ValueError("text_align_margin must be of type <int>.")
+        # -------- FONT
 
         if font is None:
-            self._font = pygame.font.SysFont("consolas", self._text_size)
-        elif check_tools.is_str(font):
-            self._font = pygame.font.SysFont(font, self._text_size)
-        elif isinstance(font, pygame.font.Font):
-            self._font = font
+            # font = self.theme.font (not implemented yet)
+            font = pygame.font.SysFont("Consolas", self._text_size)
+
+        elif isinstance(font, str):
+            if font in pygame.font.get_fonts():
+                font = pygame.font.SysFont(font, self._text_size)
+            else:
+                raise ValueError(f"font '{font}' does not exist in the system fonts.")
+
         else:
-            raise ValueError("font argument must be of type <str>.")
+
+            if not isinstance(font, pygame.font.Font):
+                raise TypeError(f"font must be of type pygame.font.Font, not '{type(font)}'.")
+
+        self._font = font
+
+        if check_tools.is_bool(text_antialiasing):
+            self._text_antialiasing = text_antialiasing
+
+        elif text_antialiasing is None:
+            self._text_antialiasing = True
+
+        else:
+            raise TypeError(f"text_antialiasing must be of type bool, not '{type(text_antialiasing)}'.")
+
+        # -------- ALIGNMENT
+
+        if text_alignment_x is None:
+            text_alignment_x = c.Alignments.CENTER
+        else:
+            if not isinstance(text_alignment_x, c.Alignments):
+                raise TypeError(f"text_alignment_x must be of type Alignments, not '{type(text_alignment_x)}'.")
+
+        self._text_alignment_x = text_alignment_x
+
+        if text_alignment_y is None:
+            text_alignment_y = c.Alignments.CENTER
+        else:
+            if not isinstance(text_alignment_y, c.Alignments):
+                raise TypeError(f"text_alignment_y must be of type Alignments, not '{type(text_alignment_y)}'.")
+
+        self._text_alignment_y = text_alignment_y
+
+        if text_alignment_margin is None:
+            text_alignment_margin = 5
+
+        else:
+            if not check_tools.is_int(text_alignment_margin):
+                try:
+                    text_alignment_margin = int(text_alignment_margin)
+                except ValueError:
+                    raise TypeError(f"text_alignment_margin must be of type int, not "
+                                    f"'{type(text_alignment_margin)}'.")
+                else:
+                    pass
+
+                if text_alignment_margin < 0:
+                    raise ValueError(f"text_alignment_margin must be greater than or equal to 0, not "
+                                     f"'{text_alignment_margin}'.")
+
+        self._text_alignment_margin = text_alignment_margin
+
+        # -------- BORDER
+
+        if border_radius is None:
+            border_radius = 0
+
+        else:
+            if not check_tools.is_int(border_radius):
+                try:
+                    border_radius = int(border_radius)
+                except ValueError:
+                    raise TypeError(f"border_radius must be of type int, not '{type(border_radius)}'.")
+                else:
+                    pass
+
+                if border_radius < 0:
+                    raise ValueError(f"border_radius must be greater than or equal to 0, not "
+                                     f"'{border_radius}'.")
+
+        self._border_radius = border_radius
+
+        if border_width is None:
+            border_width = 2
+
+        else:
+            if not check_tools.is_int(border_width):
+                try:
+                    border_width = int(border_width)
+                except ValueError:
+                    raise TypeError(f"border_width must be of type int, not '{type(border_width)}'.")
+                else:
+                    pass
+
+                if border_width < 0:
+                    raise ValueError(f"border_width must be greater than or equal to 0, not "
+                                     f"'{border_width}'.")
+
+        self._border_width = border_width
+
+        # -------- ON CLICK FUNCTIONS
 
         if on_click_function is None:
-            self._on_click_function = self._default_on_click_function
-        elif isinstance(on_click_function, Callable):
+            self._on_click_function = c.dummy_function
+        else:
+            if not callable(on_click_function):
+                raise TypeError(f"on_click_function must be callable, not '{type(on_click_function)}'.")
+
             self._on_click_function = on_click_function
+
+        # args / kwargs
+
+        if on_click_function_args is None:
+            self._on_click_function_args = ()
         else:
-            raise ValueError("on_click_function must be of type <function> or None.")
+            if not check_tools.is_tuple(on_click_function_args):
+                raise TypeError(f"on_click_function_args must be of type tuple, not '{type(on_click_function_args)}'.")
+            else:
+                self._on_click_function_args = on_click_function_args
 
-        self._rect: pygame.Rect = pygame.rect.Rect(self._pos_x, self._pos_y, self._width, self._height)
-
-        if check_tools.is_bool(on_hover_change_cursor):
-            self._on_hover_change_cursor: bool = on_hover_change_cursor
+        if on_click_function_kwargs is None:
+            self._on_click_function_kwargs = {}
         else:
-            raise ValueError("on_hover_change_cursor must be of type <bool>.")
+            if not check_tools.is_dict(on_click_function_kwargs):
+                raise TypeError(
+                    f"on_click_function_kwargs must be of type dict, not '{type(on_click_function_kwargs)}'.")
+            else:
+                self._on_click_function_kwargs = on_click_function_kwargs
 
-        if check_tools.is_bool(on_disabled_change_cursor):
-            self._on_disabled_change_cursor: bool = on_disabled_change_cursor
+        # -------- ON HOVER FUNCTIONS
+
+        if on_hover_function is None:
+            self._on_hover_function = c.dummy_function
+
         else:
-            raise ValueError("on_disabled_change_cursor must be of type <bool>.")
+            if not callable(on_hover_function):
+                raise TypeError(f"on_hover_function must be callable, not '{type(on_hover_function)}'.")
 
-        if check_tools.is_bool(antialiasing):
-            self._antialiasing = antialiasing
+            self._on_hover_function = on_hover_function
+
+        # args / kwargs
+
+        if on_hover_function_args is None:
+            self._on_hover_function_args = ()
+
         else:
-            raise ValueError("antialiasing argument must be of type <bool>.")
+            if not isinstance(on_hover_function_args, tuple):
+                raise TypeError(f"on_hover_function_args must be of type tuple, not '{type(on_hover_function_args)}'.")
+            else:
+                self._on_hover_function_args = on_hover_function_args
 
-        self._text_surface = self._font.render(self._text, self._antialiasing, (255, 255, 255))
+        if on_hover_function_kwargs is None:
+            self._on_hover_function_kwargs = {}
 
-        # will raise ValueError if text_align_x or text_align_y is not correct
-        self._text_rect = text_align.align(self._rect, self._text_surface.get_rect(),
-                                           text_align_y, text_align_x,
-                                           margin=self._text_align_margin)
+        else:
+            if not check_tools.is_dict(on_hover_function_kwargs):
+                raise TypeError(
+                    f"on_hover_function_kwargs must be of type dict, not '{type(on_hover_function_kwargs)}'.")
+            else:
+                self._on_hover_function_kwargs = on_hover_function_kwargs
 
-        self._text_align_y = text_align_y
-        self._text_align_x = text_align_x
+        # -------- CURSOR
 
-        self._prev_pressed = False
-        self._changed_cursor = False
+        if cursor_change_hover is None:
+            cursor_change_hover = True
+
+        else:
+            if not check_tools.is_bool(cursor_change_hover):
+                raise TypeError(f"cursor_change_hover must be of type bool, not '{type(cursor_change_hover)}'.")
+
+        self._cursor_change_hover = cursor_change_hover
+
+        # -------- MISC
+
+        self._rect = pygame.rect.Rect(self._pos_x, self._pos_y, self._width, self._height)
+
+        self._previously_pressed = False
+        self._previously_hovered = False
+
         self._state = c.States.INACTIVE
 
-        # Create colors.
-        self._create_colors()
+        self._text_surface = None
+        self._text_rect = None
 
-        if not check_tools.is_num(rounded_corners_amount) and rounded_corners_amount is not None:
-            raise ValueError("rounded_corners_amount must be of type <int> or <float>.")
+        self._changed_cursor = False
 
-        if rounded_corners_amount is None:
-            self._rounded_corners_amount = int(((self._width / c.SMART_ROUNDED_CORNERS_MULTIPLIER)
-                                                + (self._height / c.SMART_ROUNDED_CORNERS_MULTIPLIER)) / 2)
-        elif rounded_corners_amount == -1:
-            self._rounded_corners_amount = -1
-        else:
-            self._rounded_corners_amount = int(rounded_corners_amount)
+        # -------- COLORS
 
-    def _create_colors(self) -> None:
+        # disabled
+        self._color_disabled: str | None = None
+        self._color_disabled_outline: str | None = None
+        self._color_disabled_text: str | None = None
+        # pressed
+        self._color_pressed: str | None = None
+        self._color_pressed_outline: str | None = None
+        self._color_pressed_text: str | None = None
+        # hovered
+        self._color_hovered: str | None = None
+        self._color_hovered_outline: str | None = None
+        self._color_hovered_text: str | None = None
+        # base
+        self._color_base: str | None = None
+        self._color_outline: str | None = None
+        self._color_text: str | None = None
+
+        self._load_colors()
+
+        self._render_text_surface()
+
+    def _render_text_surface(self) -> None:
         """
-        Creates the colors.
-        This function is mainly to stop calculating stuff in the update() method.
+        Renders/reloads the text surface.
         """
-        self._color_disabled = color_tools.change_hex_brightness(self._theme.surface,
-                                                                 self._theme.brightness_offsets["disabled"])
-        self._color_disabled_text = color_tools.change_hex_brightness(self._theme.on_surface,
-                                                                      self._theme.brightness_offsets["disabled-text"])
-        self._color_pressed = color_tools.change_hex_brightness(self._theme.surface,
-                                                                self._theme.brightness_offsets["pressed"])
-        self._color_hovered = color_tools.change_hex_brightness(self._theme.surface,
-                                                                self._theme.brightness_offsets["hovered"])
 
-        self._color_hovered_outline = color_tools.change_hex_brightness(self._theme.surface,
-                                                                        self._theme.brightness_offsets[
-                                                                            "hovered-outline"])
-        self._color_text = self._theme.on_surface
-        self._color_base = self._theme.surface
+        color_table = {
+            c.States.DISABLED: self._color_disabled_text,
+            c.States.PRESSED: self._color_pressed_text,
+            c.States.HOVERED: self._color_hovered_text,
+            c.States.INACTIVE: self._color_text
+        }
 
-    def render(self, screen: pygame.Surface) -> None:
-        """Draw to the pygame surface."""
 
-        # If the button is disabled, draw the disabled color.
-        if self._state == c.States.DISABLED:
-            if self._color_disabled is not None:
-                pygame.draw.rect(screen, self._color_disabled, self._rect, border_radius=self._rounded_corners_amount)
+        self._text_surface = self._font.render(self._text, self._text_antialiasing, color_table[self._state])
+        self._text_rect = self._text_surface.get_rect()
 
-            if self._text and self._color_disabled is not None:  # if text is not ""
-                # Render the text.
-                self._text_surface = self._font.render(self._text, self._antialiasing, self._color_disabled_text)
+        # Align the text, using the text_align.align_new function.
+        self._text_rect = text_align.align_new(
+            area_rect=self._rect,
+            text_rect=self._text_rect,
+            text_align_x=self._text_alignment_x,
+            text_align_y=self._text_alignment_y,
+            margin=self._text_alignment_margin
+        )
 
-                # Blit to the screen
-                screen.blit(self._text_surface, self._text_rect)
+    def _load_colors(self) -> None:
+        """
+        Loads the colors.
+        """
 
-        # If the button is not disabled, draw the normal color.
-        elif self._state == c.States.PRESSED:
-            if self._color_pressed is not None:
-                pygame.draw.rect(screen, self._color_pressed, self._rect, border_radius=self._rounded_corners_amount)
-
-            if self._text and self._color_text is not None:  # if text is not ""
-                # Render the text.
-                self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
-
-                # Blit to the screen
-                screen.blit(self._text_surface, self._text_rect)
-
-        elif self._state == c.States.HOVERED:
-            if self._color_hovered is not None:
-                pygame.draw.rect(screen, self._color_hovered, self._rect, border_radius=self._rounded_corners_amount)
-
-            if self._color_hovered_outline is not None:
-                pygame.draw.rect(screen, self._color_hovered_outline, self._rect, 3,
-                                 border_radius=self._rounded_corners_amount)
-
-            if self._text and self._color_text is not None:  # if text is not ""
-                # Render the text.
-                self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
-
-                # Blit to the screen
-                screen.blit(self._text_surface, self._text_rect)
-
-        else:
-
-            if self._color_base is not None:
-                pygame.draw.rect(screen, self._color_base, self._rect,
-                                 border_radius=self._rounded_corners_amount)
-
-            if self._text and self._color_text is not None:  # if text is not ""
-                # Render the text.
-                self._text_surface = self._font.render(self._text, self.antialiasing, self._color_text)
-
-                # Blit to the screen
-                screen.blit(self._text_surface, self._text_rect)
+        # Disabled
+        self._color_disabled = self._theme.button_data.disabled
+        self._color_disabled_outline = self._theme.button_data.outline_disabled
+        self._color_disabled_text = self._theme.button_data.text_disabled
+        # Pressed
+        self._color_pressed = self._theme.button_data.pressed
+        self._color_pressed_outline = self._theme.button_data.outline_pressed
+        self._color_pressed_text = self._theme.button_data.text_pressed
+        # Hovered
+        self._color_hovered = self._theme.button_data.hovered
+        self._color_hovered_outline = self._theme.button_data.outline_hovered
+        self._color_hovered_text = self._theme.button_data.text_hovered
+        # Base
+        self._color_outline = self._theme.button_data.outline_base
+        self._color_text = self._theme.button_data.text_base
+        self._color_base = self._theme.button_data.base
 
     def update(self, dt: float) -> None:
         """
@@ -260,48 +420,55 @@ class DefaultButton(Element):
         :param dt: Delta Time.
         """
 
-        self._prev_pressed = self._state == c.States.PRESSED
-
         mouse_pos = pygame.mouse.get_pos()
-        mouse_keys = pygame.mouse.get_pressed()
+        mouse_buttons = pygame.mouse.get_pressed()
 
-        if self._state != c.States.DISABLED:
+        previous_state = self._state
 
-            if self._rect.collidepoint(mouse_pos):
-                if mouse_keys[0]:
-                    if not self._state == c.States.HOVERED:
-                        if not self._prev_pressed:
-                            self._state = c.States.INACTIVE
-                        else:
-                            self._state = c.States.PRESSED
-                    else:
-                        self._state = c.States.PRESSED
+        # Determine the current state of the button
+        if self._state == c.States.DISABLED:
+            self._state = c.States.DISABLED
+
+        elif self._rect.collidepoint(mouse_pos):
+            if mouse_buttons[0]:
+                if self._state == c.States.HOVERED or self._previously_pressed:
+                    self._state = c.States.PRESSED
                 else:
-                    self._state = c.States.HOVERED
-
+                    self._state = c.States.INACTIVE
             else:
-                self._state = c.States.INACTIVE
+                self._state = c.States.HOVERED
         else:
-            self.state = c.States.DISABLED
+            self._state = c.States.INACTIVE
 
+        # Call the hover function if the button has just been hovered over
+        if self._state == c.States.HOVERED and \
+                not self._previously_hovered and \
+                self._on_hover_function and \
+                previous_state != c.States.PRESSED:
+            self._on_hover_function(*self._on_hover_function_args, **self._on_hover_function_kwargs)
+
+        # Call the click function if the button has just been clicked
+        if self._state == c.States.PRESSED and \
+                not self._previously_pressed and \
+                self._on_click_function:
+            self._on_click_function(*self._on_click_function_args, **self._on_click_function_kwargs)
+
+        # Update the previous states
+        self._previously_pressed = self._state == c.States.PRESSED
+        self._previously_hovered = self._state == c.States.HOVERED
+
+        if self._state != previous_state:
+            self._render_text_surface()
+
+        # Change the cursor to a hand icon if the button is active
         self._change_cursor()
-
-        if self._state == c.States.PRESSED and not self._prev_pressed and self._on_click_function is not None:
-            self._on_click_function()
 
     def _change_cursor(self) -> None:
         """
-        Changes the cursor.
-        Called every update()
+        Changes the cursor to a hand icon if the button is active.
         """
 
-        mouse_pos = pygame.mouse.get_pos()
-
-        if self._state == c.States.DISABLED and self._rect.collidepoint(mouse_pos) and self._on_disabled_change_cursor:
-            pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_NO)
-            self._changed_cursor = True
-
-        elif (self._state == c.States.HOVERED or self._state == c.States.PRESSED) and self._on_hover_change_cursor:
+        if self._state in (c.States.HOVERED, c.States.PRESSED) and self._cursor_change_hover:
             pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
             self._changed_cursor = True
 
@@ -309,214 +476,501 @@ class DefaultButton(Element):
             pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_ARROW)
             self._changed_cursor = False
 
-    def event(self, event: pygame.event.Event) -> None:
+    def draw(self, surface: pygame.Surface) -> None:
         """
-        Handle a pygame event.
-        Call this in the main event loop.
+        Draw the element to the given surface.
+        :param surface: The surface to draw on.
         """
-        pass
+
+        if self._state == c.States.DISABLED:
+            pygame.draw.rect(surface, self._color_disabled, self._rect, border_radius=self._border_radius)
+            pygame.draw.rect(surface, self._color_disabled_outline, self._rect, border_radius=self._border_radius,
+                             width=self._border_width)
+            surface.blit(self._text_surface, self._text_rect)
+
+        elif self._state == c.States.PRESSED:
+            pygame.draw.rect(surface, self._color_pressed, self._rect, border_radius=self._border_radius)
+            pygame.draw.rect(surface, self._color_pressed_outline, self._rect, border_radius=self._border_radius,
+                             width=self._border_width)
+            surface.blit(self._text_surface, self._text_rect)
+
+        elif self._state == c.States.HOVERED:
+            pygame.draw.rect(surface, self._color_hovered, self._rect, border_radius=self._border_radius)
+            pygame.draw.rect(surface, self._color_hovered_outline, self._rect, border_radius=self._border_radius,
+                             width=self._border_width)
+            surface.blit(self._text_surface, self._text_rect)
+
+        else:
+            pygame.draw.rect(surface, self._color_base, self._rect, border_radius=self._border_radius)
+            pygame.draw.rect(surface, self._color_outline, self._rect, border_radius=self._border_radius,
+                             width=self._border_width)
+            surface.blit(self._text_surface, self._text_rect)
+
+    def _update_position(self, x: int, y: int) -> None:
+        """
+        Updates the position of the button.
+        """
+
+        self._pos_x = x
+        self._pos_y = y
+        self._rect.x = self._pos_x
+        self._rect.y = self._pos_y
+
+        self._render_text_surface()  # aligns and renders the text surface
+
+    @property
+    def pos_x(self) -> int:
+        return self._pos_x
+
+    @pos_x.setter
+    def pos_x(self, x: int) -> None:
+
+        # type checks
+        if not check_tools.is_int(x):
+            raise TypeError(f"pos_x must be of type int, not '{type(x)}'.")
+
+        self._update_position(x, self._pos_y)
+
+    @property
+    def pos_y(self) -> int:
+        return self._pos_y
+
+    @pos_y.setter
+    def pos_y(self, y: int) -> None:
+
+        # type checks
+        if not check_tools.is_int(y):
+            raise TypeError(f"pos_y must be of type int, not '{type(y)}'.")
+
+        self._update_position(self._pos_x, y)
+
+    @property
+    def pos(self) -> Tuple[int, int]:
+        return self._pos_x, self._pos_y
+
+    @pos.setter
+    def pos(self, pos: Tuple[int, int]) -> None:
+
+        # type checks
+
+        if not check_tools.is_tuple(pos):
+            raise TypeError(f"pos must be of type tuple, not '{type(pos)}'.")
+
+        # it is tuple
+
+        if len(pos) != 2:
+            raise ValueError(f"pos must contain two integers, not '{pos}'.")
+
+        # it is len 2
+
+        if not check_tools.is_int(pos[0]) or not check_tools.is_int(pos[1]):
+            raise TypeError(f"pos must contain two integers, not '{pos}'.")
+
+        # it is int tuple
+
+        self._update_position(pos[0], pos[1])
+
+    @property
+    def center(self) -> Tuple[int, int]:
+        return self._rect.center
+
+    @center.setter
+    def center(self, center: Tuple[int, int]) -> None:
+
+        # type checks
+
+        if not check_tools.is_tuple(center):
+            raise TypeError(f"center must be of type tuple, not '{type(center)}'.")
+
+        # it is tuple
+
+        if len(center) != 2:
+            raise ValueError(f"center must contain two integers, not '{center}'.")
+
+        # it is len 2
+
+        if not check_tools.is_int(center[0]) or not check_tools.is_int(center[1]):
+            raise TypeError(f"center must contain two integers, not '{center}'.")
+
+        # it is int tuple
+
+        self._rect.center = center
+        self._update_position(self._rect.x, self._rect.y)
+
+    @property
+    def centerx(self) -> int:
+        return self._rect.centerx
+
+    @centerx.setter
+    def centerx(self, x: int) -> None:
+
+        # type checks
+        if not check_tools.is_int(x):
+            raise TypeError(f"centerx must be of type int, not '{type(x)}'.")
+
+        self._rect.centerx = x
+        self._update_position(self._rect.x, self._rect.y)
+
+    @property
+    def centery(self) -> int:
+        return self._rect.centery
+
+    @centery.setter
+    def centery(self, y: int) -> None:
+
+        # type checks
+        if not check_tools.is_int(y):
+            raise TypeError(f"centery must be of type int, not '{type(y)}'.")
+
+        self._rect.centery = y
+        self._update_position(self._rect.x, self._rect.y)
+
+    @property
+    def width(self) -> int:
+        return self._width
+
+    @width.setter
+    def width(self, width: int) -> None:
+
+        # type checks
+        if not check_tools.is_int(width):
+            raise TypeError(f"width must be of type int, not '{type(width)}'.")
+
+        self._width = width
+        self._rect.width = self._width
+        self._render_text_surface()
+
+    @property
+    def height(self) -> int:
+        return self._height
+
+    @height.setter
+    def height(self, height: int) -> None:
+        # type checks
+        if not check_tools.is_int(height):
+            raise TypeError(f"height must be of type int, not '{type(height)}'.")
+
+        self._height = height
+        self._rect.height = self._height
+        self._render_text_surface()
+
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self._width, self._height
+
+    @size.setter
+    def size(self, size: Tuple[int, int]) -> None:
+        # type checks
+
+        if not check_tools.is_tuple(size):
+            raise TypeError(f"size must be of type tuple, not '{type(size)}'.")
+
+        # it is tuple
+
+        if len(size) != 2:
+            raise ValueError(f"size must contain two integers, not '{size}'.")
+
+        # it is len 2
+
+        if not check_tools.is_int(size[0]) or not check_tools.is_int(size[1]):
+            raise TypeError(f"size must contain two integers, not '{size}'.")
+
+        # it is int tuple
+
+        self._width = size[0]
+        self._height = size[1]
+        self._rect.width = self._width
+        self._rect.height = self._height
+        self._render_text_surface()
 
     @property
     def text(self) -> str:
-        """
-        Gets the current text.
-        """
         return self._text
 
     @text.setter
     def text(self, text: str) -> None:
-        """
-        Set the current text.
-        Must be a string value.
-        :param text: Text Value.
-        :raises ValueError: If the text is not a string.
-        """
-
-        if not isinstance(text, str):
-            raise ValueError("text argument must be of type <str>.")
+        # type checks
+        if not check_tools.is_str(text):
+            raise TypeError(f"text must be of type str, not '{type(text)}'.")
 
         self._text = text
+        self._render_text_surface()
 
     @property
-    def on_click_function(self) -> None or Callable:
+    def font(self) -> pygame.font.Font:
+        return self._font
+
+    @font.setter
+    def font(self, font: pygame.font.Font) -> None:
+        # type checks
+        if not check_tools.is_font(font):
+            raise TypeError(f"font must be of type pygame.font.Font, not '{type(font)}'.")
+
+        self._font = font
+        self._render_text_surface()
+
+    @property
+    def text_size(self) -> int:
+        return self._text_size
+
+    @text_size.setter
+    def text_size(self, text_size: int) -> None:
+        # type checks
+        if not check_tools.is_int(text_size):
+            raise TypeError(f"text_size must be of type int, not '{type(text_size)}'.")
+
+        self._text_size = text_size
+        self._render_text_surface()
+
+    @property
+    def text_antialiasing(self) -> bool:
+        return self._text_antialiasing
+
+    @text_antialiasing.setter
+    def text_antialiasing(self, text_antialiasing: bool) -> None:
+        # type checks
+        if not check_tools.is_bool(text_antialiasing):
+            raise TypeError(f"text_antialiasing must be of type bool, not '{type(text_antialiasing)}'.")
+
+        self._text_antialiasing = text_antialiasing
+        self._render_text_surface()
+
+    @property
+    def theme(self) -> Theme:
+        return self._theme
+
+    @theme.setter
+    def theme(self, value: themes.Theme | str) -> None:
         """
-        Returns the current on click function.
-        Returns None if there is no current on_click_function or if it is the default one.
-        :returns Callable: The on_click_function
-        :returns None: If there is no on_click_function or if it is the default one.
+        Sets the theme and reloads the colours.
+        Returns the default theme if it is not found.
+
+        :param value: Theme object or the name of the theme.
+        :raises ValueError: If theme object is not a valid theme.
         """
 
-        if self._on_click_function == self._default_on_click_function:
-            return
+        if not isinstance(value, themes.Theme) and not isinstance(value, str):
+            raise ValueError("Invalid theme. Use a Theme object theme or a string of the name of the theme.")
 
-        elif self._on_click_function is None:
-            return
+        if isinstance(value, themes.Theme):
+            theme = value
+
+        elif isinstance(value, str):
+            # it is a string
+            theme = themes.get_theme(value)
 
         else:
-            return self._on_click_function
+            log.error("Unreachable code? Defaulting to default theme.")
+            theme = themes.get_default_theme()
 
-    @on_click_function.setter
-    def on_click_function(self, value: Callable) -> None:
-        """
-        Set the on_click_function.
-        :raises ValueError: If the value is not a Callable function.
-        """
+        self._theme = theme
 
-        if value is None:
-            self._on_click_function = None
+        self._load_colors()
+        self._render_text_surface()
 
-        elif not isinstance(value, Callable):
-            raise ValueError("on_click_function must be of type <function>.")
+    @property
+    def border_radius(self) -> int:
+        return self._border_radius
+
+    @border_radius.setter
+    def border_radius(self, border_radius: int) -> None:
+        # type checks
+
+        if check_tools.is_int(border_radius):
+            if border_radius < 0:
+                raise ValueError(f"border_radius must be greater than or equal to 0, not "
+                                 f"'{border_radius}'.")
+            else:
+                self._border_radius = border_radius
 
         else:
-            self._on_click_function = value
+            try:
+                int(border_radius)
+
+            except ValueError:
+                raise ValueError(f"border_radius must be of type int, not '{type(border_radius)}'.")
+
+            else:
+                if int(border_radius) < 0:
+                    raise ValueError(f"border_radius must be greater than or equal to 0, not "
+                                     f"'{int(border_radius)}'.")
+                else:
+                    self._border_radius = int(border_radius)
+
+    @property
+    def border_width(self) -> int:
+        return self._border_width
+
+    @border_width.setter
+    def border_width(self, border_width: int) -> None:
+        # type checks
+
+        if check_tools.is_int(border_width):
+            if border_width < 0:
+                raise ValueError(f"border_width must be greater than or equal to 0, not "
+                                 f"'{border_width}'.")
+            else:
+                self._border_width = border_width
+
+        else:
+            try:
+                int(border_width)
+
+            except ValueError:
+                raise ValueError(f"border_width must be of type int, not '{type(border_width)}'.")
+
+            else:
+                if int(border_width) < 0:
+                    raise ValueError(f"border_width must be greater than or equal to 0, not "
+                                     f"'{int(border_width)}'.")
+                else:
+                    self._border_width = int(border_width)
+
+    @property
+    def on_click_function(self) -> Callable:
+        return self._on_click_function
+
+    @property
+    def on_hover_function(self) -> Callable:
+        return self._on_hover_function
+
+    @property
+    def cursor_change_hover(self) -> bool:
+        return self._cursor_change_hover
+
+    @cursor_change_hover.setter
+    def cursor_change_hover(self, value: bool) -> None:
+        if not check_tools.is_bool(value):
+            raise TypeError(f"cursor_change_hover must be of type bool, not '{type(value)}'.")
+
+        self._cursor_change_hover = bool(value)
 
     @property
     def state(self) -> c.States:
-        """
-        Gets the current state of the button.
-        :returns state: Returns the worded string representation of the state.
-        """
         return self._state
 
     @state.setter
-    def state(self, state: str | c.States) -> None:
-        """
-        Set the state of the button. Use from buttonup.States.<state>
+    def state(self, value: c.States) -> None:
+        try:
+            value = c.States(value)
+        except ValueError:
+            raise ValueError(f"state must be of type States, not '{type(value)}'.")
 
-        :param state: The requested state. Must be one of: ["disabled", "hovered", "pressed", "inactive"] or a state
-            from buttonup.States.
-        :raises ValueError: If the state is none of the possible states.
-        """
+        self._state = value
 
-        if isinstance(state, str):
-            if state in c.States.__members__:
-                self._state = c.States[state]
-            else:
-                raise ValueError("state must be one of: ['disabled', 'hovered', 'pressed', 'inactive'] or a state from "
-                                 "buttonup.States.")
-        elif isinstance(state, c.States):
-            self._state = state
-
-
-
-    @staticmethod
-    def _default_on_click_function() -> None:
-        print(f"Button clicked")
-
-    def set_color(self, key: str, color: Any) -> None:
-        """
-        Set a certain color of the button.
-
-        :param key: The requested color. Must be one of: ['disabled', 'disabled_text', 'pressed',
-                    'hovered', 'hovered_outline']. It is not case sensitive.
-        :param color: The color to set.
-        """
-
-        # check if key is correct
-        colors = ['disabled', 'disabled_text', 'pressed',
-                  'hovered', 'hovered_outline']
-
-        if key.lower() not in colors:
-            raise ValueError(f"Invalid key '{key}'.", "invalid_key")
-
-        if not color_tools.is_color(color):
-            raise ValueError(f"Invalid color '{color}'.", "invalid_color")
-
-        color = color.lower()
-
-        if color == "disabled":
-            self._color_disabled = color
-        elif color == "disabled_text":
-            self._color_disabled_text = color
-        elif color == "pressed":
-            self._color_pressed = color
-        elif color == "hovered":
-            self._color_hovered = color
-        elif color == "hovered_outline":
-            self._color_hovered_outline = color
+        self._render_text_surface()
 
     @property
-    def pos(self) -> tuple[int, int]:
-        """
-        Gets a tuple of the position of the button.
-        :return pos: The position.
-        """
-        return self._pos_x, self._pos_y
+    def color_base(self) -> Any:
+        return self._color_base
 
-    @pos.setter
-    def pos(self, value: tuple[int, int]) -> None:
-        """
-        Sets the position of the button.
-        :raises ValueError: If the position is invalid.
-        """
+    @color_base.setter
+    def color_base(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_base must be rgb, hex, or pygame.Color, not '{value}'.")
 
-        if not check_tools.is_pos(value):
-            raise ValueError(f"position must be tuple[int, int] not '{value}'.")
-
-        self._pos_x = value[0]
-        self._pos_y = value[1]
-        self._rect.topleft = value
-
-        self._text_rect = text_align.align(self._rect, self._text_surface.get_rect(),
-                                           self._text_align_y, self._text_align_x,
-                                           margin=self._text_align_margin)
+        self._color_base = value
 
     @property
-    def x(self) -> int:
-        """
-        Gets the x value of the button.
-        """
-        return self._pos_x
+    def color_outline(self) -> Any:
+        return self._color_outline
 
-    @x.setter
-    def x(self, value: int) -> None:
-        """
-        Set the x value of the button
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = int(value), self.pos[1]
-        else:
-            raise ValueError("x value must be of type <int> or <float>.")
+    @color_outline.setter
+    def color_outline(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_outline = value
 
     @property
-    def y(self) -> int:
-        """
-        Gets the x value of the button.
-        """
-        return self._pos_y
+    def color_text(self) -> Any:
+        return self._color_text
 
-    @y.setter
-    def y(self, value: int) -> None:
-        """
-        Set the x value of the button
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = self.pos[0], int(value)
-        else:
-            raise ValueError("y value must be of type <int> or <float>.")
+    @color_text.setter
+    def color_text(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_text must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_text = value
+
+        self._render_text_surface()
 
     @property
-    def antialiasing(self) -> bool:
-        """
-        Get whether the text is anti aliased.
-        """
-        return self._antialiasing
+    def color_disabled(self) -> Any:
+        return self._color_disabled
 
-    @antialiasing.setter
-    def antialiasing(self, value: bool) -> None:
-        """
-        Set antialiasing for the text.
-        :param value: Antialiasing
-        :raises ValueError: If the value is not a bool.
-        """
-        if check_tools.is_bool(value):
-            self._antialiasing = value
-        else:
-            raise ValueError("antialiasing argument must be of type <bool>.")
+    @color_disabled.setter
+    def color_disabled(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_disabled must be rgb, hex, or pygame.Color, not '{value}'.")
 
-    def __str__(self) -> str:
-        return f"<DefaultButton, pos: {self.pos}, state: {self.state}>"
+        self._color_disabled = value
+
+    @property
+    def color_disabled_outline(self) -> Any:
+        return self._color_disabled_outline
+
+    @color_disabled_outline.setter
+    def color_disabled_outline(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_disabled_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_disabled_outline = value
+
+    @property
+    def color_disabled_text(self) -> Any:
+        return self._color_disabled_text
+
+    @color_disabled_text.setter
+    def color_disabled_text(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_disabled_text must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_disabled_text = value
+
+        self._render_text_surface()
+
+    @property
+    def color_pressed(self) -> Any:
+        return self._color_pressed
+
+    @color_pressed.setter
+    def color_pressed(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_pressed must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_pressed = value
+
+    @property
+    def color_pressed_outline(self) -> Any:
+        return self._color_pressed_outline
+
+    @color_pressed_outline.setter
+    def color_pressed_outline(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_pressed_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_pressed_outline = value
+
+    @property
+    def color_hovered(self) -> Any:
+        return self._color_hovered
+
+    @color_hovered.setter
+    def color_hovered(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_hovered must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_hovered = value
+
+    @property
+    def color_hovered_outline(self) -> Any:
+        return self._color_hovered_outline
+
+    @color_hovered_outline.setter
+    def color_hovered_outline(self, value: Any) -> None:
+        if not color_tools.is_color(value):
+            raise ValueError(f"color_hovered_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+
+        self._color_hovered_outline = value
 

@@ -1,7 +1,11 @@
 from enum import Enum as _Enum
+import logging
+
+log = logging.getLogger(__name__)
 
 __all__ = [
-    'States'
+    'States',
+    'Alignments'
 ]
 
 
@@ -10,6 +14,15 @@ class States(_Enum):
     HOVERED = "HOVERED"
     PRESSED = "PRESSED"
     DISABLED = "DISABLED"
+
+
+class Alignments(_Enum):
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+    CENTER = "CENTER"
+    TOP = "TOP"
+    BOTTOM = "BOTTOM"
+    MIDDLE = "CENTER"  # middle and center are the same thing
 
 
 _THEME_COLOR_ELEMENTS = [
@@ -39,3 +52,7 @@ VERSION_MINOR = 2
 VERSION_PATCH = 7
 
 VERSION = f"{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}"
+
+
+def dummy_function():
+    pass

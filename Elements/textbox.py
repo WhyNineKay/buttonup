@@ -1,5 +1,4 @@
 from .. Utility.program_tools import check_tools
-from .. Utility.globs import globs
 from .. Elements import element
 from .. Themes import themes
 
@@ -64,7 +63,7 @@ class DefaultTextBox(element.Element):
             raise ValueError("font argument must be of type <str>.")
 
         if theme is None:
-            self._theme = globs.project_theme
+            self._theme = themes.get_default_theme()
         elif isinstance(theme, themes.Theme):
             self._theme = theme
         elif isinstance(theme, str):

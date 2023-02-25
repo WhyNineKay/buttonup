@@ -1,6 +1,5 @@
 from ..Utility.program_tools import check_tools, color_tools
 from ..Elements.element import Element
-from ..Utility.globs import globs
 from ..Elements import button
 from ..Themes import themes
 from .. import constants as c
@@ -66,7 +65,7 @@ class DefaultSlider(Element):
             raise ValueError("size values must be of type <int> or <float>.")
 
         if theme is None:
-            self._theme = globs.project_theme
+            self._theme = themes.get_default_theme()
         elif isinstance(theme, themes.Theme):
             self._theme = theme
         elif isinstance(theme, str):
@@ -104,12 +103,9 @@ class DefaultSlider(Element):
 
         self._slider_button = button.DefaultButton(
             self._pos_x, int(self._pos_y - self._slider_size / 2 + self._rail_height / 2), self._slider_size,
-            self._slider_size, theme=globs.project_theme, text="", on_hover_change_cursor=self._on_hover_change_cursor,
-            rounded_corners_amount=self._slider_rounded_corners_amount,
-            on_disabled_change_cursor=self._on_disabled_change_cursor
+            self._slider_size, theme=themes.get_default_theme(), text="", cursor_change_hover=self._on_hover_change_cursor,
+            border_radius=self._slider_rounded_corners_amount, on_click_function=self._dummy_function
         )
-
-        self._slider_button.on_click_function = None
 
         self._held = False
         self._changed_cursor = False
@@ -118,6 +114,9 @@ class DefaultSlider(Element):
         self._moved_direction = None
 
         self._create_colors()
+
+    def _dummy_function(self) -> None:
+        pass
 
     def _create_colors(self) -> None:
         self._color_rail = color_tools.change_hex_brightness(self._theme.surface,
@@ -141,9 +140,9 @@ class DefaultSlider(Element):
             self._dont_move = False
 
         if self._held:
-            if mouse_pos[0] < self._slider_button.x + self._slider_size / 2 and self._moved_direction == "left":
+            if mouse_pos[0] < self._slider_button.pos_x + self._slider_size / 2 and self._moved_direction == "left":
                 self._dont_move = False
-            elif mouse_pos[0] > self._slider_button.x + self._slider_size / 2 and self._moved_direction == "right":
+            elif mouse_pos[0] > self._slider_button.pos_x + self._slider_size / 2 and self._moved_direction == "right":
                 self._dont_move = False
 
         if self._held:
@@ -152,7 +151,7 @@ class DefaultSlider(Element):
 
             if not self._dont_move:
                 if mouse_pos[0] < self._pos_x:
-                    self._slider_button.x = self._pos_x
+                    self._slider_button.pos_x = self._pos_x
                 else:
                     if mouse_pos[0] - self._slider_size / 2 < self._pos_x:
                         pass
@@ -161,12 +160,12 @@ class DefaultSlider(Element):
                         self._slider_button.x = mouse_pos[0] - self._slider_size / 2
 
                 if mouse_pos[0] > self._pos_x + self._rail_width - self._slider_size / 2:
-                    self._slider_button.x = self._pos_x + self._rail_width - self._slider_size
+                    self._slider_button.pos_x = self._pos_x + self._rail_width - self._slider_size
                 else:
                     if mouse_pos[0] - self._slider_size / 2:
                         pass
                     else:
-                        self._slider_button.x = mouse_pos[0] - self._slider_size / 2
+                        self._slider_button.pos_x = mouse_pos[0] - self._slider_size / 2
 
         if self._held:
             pygame.mouse.set_system_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -177,14 +176,14 @@ class DefaultSlider(Element):
             self._changed_cursor = False
 
         # calculate float percentage value of slider
-        self._percent = (self._slider_button.x - self._pos_x) / (self._rail_width - self._slider_size)
+        self._percent = (self._slider_button.pos_x - self._pos_x) / (self._rail_width - self._slider_size)
 
     def render(self, screen: pygame.Surface) -> None:
         """Renders the element to the screen."""
 
         pygame.draw.rect(screen, self._color_rail, self._rail_rect, border_radius=self._rail_rounded_corners_amount)
 
-        self._slider_button.render(screen)
+        self._slider_button.draw(screen)
 
     def event(self, event: pygame.event.Event) -> None:
 
@@ -194,21 +193,21 @@ class DefaultSlider(Element):
         if event.type == pygame.KEYDOWN:
             if self._slider_button.state == c.States.PRESSED:
                 if event.key == pygame.K_RIGHT:
-                    if not self._slider_button.x + self._slider_size + move_amount > self._pos_x + self._rail_width:
-                        self._slider_button.x += move_amount
+                    if not self._slider_button.pos_x + self._slider_size + move_amount > self._pos_x + self._rail_width:
+                        self._slider_button.pos_x += move_amount
                         self._dont_move = True
                     else:
-                        self._slider_button.x = self._pos_x + self._rail_width - self._slider_size
+                        self._slider_button.pos_x = self._pos_x + self._rail_width - self._slider_size
                         self._dont_move = True
 
                     self._moved_direction = 'right'
 
                 elif event.key == pygame.K_LEFT:
-                    if not self._slider_button.x - move_amount < self._pos_x:
-                        self._slider_button.x -= move_amount
+                    if not self._slider_button.pos_x - move_amount < self._pos_x:
+                        self._slider_button.pos_x -= move_amount
                         self._dont_move = True
                     else:
-                        self._slider_button.x = self._pos_x
+                        self._slider_button.pos_x = self._pos_x
                         self._dont_move = True
 
                     self._moved_direction = 'left'
@@ -235,7 +234,7 @@ class DefaultSlider(Element):
         else:
             raise ValueError("value argument must be of type <float>.")
 
-        self._slider_button.x = self._pos_x + (self._rail_width - self._slider_size) * value
+        self._slider_button.pos_x = self._pos_x + (self._rail_width - self._slider_size) * value
 
     @property
     def pos(self) -> tuple[int, int]:

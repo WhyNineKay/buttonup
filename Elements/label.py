@@ -2,11 +2,10 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from .. Elements.element import Element
-from .. Utility.program_tools import check_tools, color_tools
-from .. Utility.globs import globs
-from .. Themes import themes
-from .. Tools import colors
+from ..Elements.element import Element
+from ..Utility.program_tools import check_tools, color_tools
+from ..Themes import themes
+from ..Tools import colors
 from .. import constants
 
 import pygame
@@ -18,7 +17,7 @@ class DefaultLabel(Element):
                  pos_y: int,
                  text: str = "Hi!",
                  text_size: int = 10,
-                 font: str = "consolas",
+                 font: str | pygame.font.Font = "consolas",
                  theme: themes.Theme = None,
                  antialiasing: bool = True) -> None:
 
@@ -49,11 +48,15 @@ class DefaultLabel(Element):
         # TODO: add font from file support
         if check_tools.is_str(font):
             self._font = pygame.font.SysFont(font, self._text_size)
+        elif isinstance(font, pygame.font.Font):
+            self._font = font
         else:
             raise ValueError("font argument must be of type <str>.")
 
+        self._font_name = font
+
         if theme is None:
-            self._theme = globs.project_theme
+            self._theme = themes.get_default_theme()
         elif isinstance(theme, themes.Theme):
             self._theme = theme
         elif isinstance(theme, str):
@@ -93,8 +96,8 @@ class DefaultLabel(Element):
 
     @text.setter
     def text(self, value: str) -> None:
-
-        # do type checks
+        if not check_tools.is_str(value):
+            raise ValueError(f"text must be str not '{value}'.")
 
         self._text = str(value)
         self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
@@ -157,6 +160,25 @@ class DefaultLabel(Element):
             raise ValueError("y value must be of type <int> or <float>.")
 
     @property
+    def center(self) -> tuple[int, int]:
+        """
+        Gets the center of the label.
+        """
+
+        return self.text_surface.get_rect().center
+
+    @center.setter
+    def center(self, value: tuple[int, int]) -> None:
+        """
+        Sets the center of the label.
+        """
+
+        if not check_tools.is_pos(value):
+            raise ValueError(f"position must be tuple[int, int] not '{value}'.")
+
+        self.pos = value[0] - self.text_surface.get_rect().center[0], value[1] - self.text_surface.get_rect().center[1]
+
+    @property
     def antialiasing(self) -> bool:
         """
         Get whether the text is antialiased.
@@ -208,6 +230,29 @@ class DefaultLabel(Element):
             self._color_text = color
 
         self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
+
+    @property
+    def text_size(self) -> int:
+        """
+        Get the size of the text.
+        """
+
+        return self._text_size
+
+    @text_size.setter
+    def text_size(self, value: int) -> None:
+        """
+        Set the size of the text.
+        :param value: The size of the text.
+        :raises ValueError: If the value is not an int.
+        """
+
+        if check_tools.is_int(value):
+            self._text_size = value
+            self._font = pygame.font.SysFont(self._font_name, self._text_size)
+            self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
+        else:
+            raise ValueError("text_size must be of type <int>.")
 
 
 @dataclass
@@ -265,7 +310,7 @@ class ColoredLabel(Element):
             raise ValueError("font argument must be of type <str>.")
 
         if theme is None:
-            self._theme = globs.project_theme
+            self._theme = themes.get_default_theme()
         elif isinstance(theme, themes.Theme):
             self._theme = theme
         elif isinstance(theme, str):
@@ -390,7 +435,7 @@ class ColoredLabel(Element):
         Get the text of all the labels, excluding any color keywords.
         :return: The text.
         """
-        return "".join([label.text for label in self._labels])
+        return "".join([label._text for label in self._labels])
 
     @property
     def pos(self) -> tuple[int, int]:
@@ -488,7 +533,7 @@ class ColoredLabel(Element):
         Get the width of the text.
         :return: The width.
         """
-        return sum([label.width for label in self._labels])
+        return sum([label._width for label in self._labels])
 
     @property
     def height(self) -> int:

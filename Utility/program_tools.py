@@ -5,6 +5,8 @@ import colorsys
 import pygame
 from typing import Any
 
+from .. constants import Alignments
+
 
 def empty_function():
     pass
@@ -124,7 +126,8 @@ class ColorTools:
 
         return self.rgb_to_hex(tuple(rgb))
 
-    def is_color(self, color: Any) -> bool:
+    @staticmethod
+    def is_color(color: Any) -> bool:
         """
         Check if a color is a valid color.
         """
@@ -237,13 +240,13 @@ class AlignText:
         return text_rect
 
     @staticmethod
-    def center_center(text_rect: pygame.Rect, area_rect: pygame.Rect) -> pygame.Rect:
+    def center_center(text_rect: pygame.Rect, area_rect: pygame.Rect, margin: int = 10) -> pygame.Rect:
         """
         This function aligns the text to the center center.
         area_rect is the rect of the area.
         text_rect is the rect of the text.
 
-        !!! Does not accept margin argument. !!!
+        Does not use margin argument, but it is still there.
 
         - - -
         - x -
@@ -367,6 +370,46 @@ class AlignText:
                 return self.bottom_right(text_rect, area_rect, margin)
         else:
             raise ValueError("the text alignments must be one of the following: " + str(cases), "INVALID_ALIGNMENT")
+
+    def align_new(self, area_rect: pygame.Rect, text_rect: pygame.Rect, text_align_x: Alignments = None,
+                  text_align_y: Alignments = None, margin: int = 10) -> pygame.Rect:
+        """
+        This function aligns the text to the given position.
+        :param area_rect: Rect of the given area.
+        :param text_rect: The rect of the text to move.
+        :param text_align_x: Alignment of the x-axis.
+        :param text_align_y: Alignment of the y-axis.
+        :param margin: The margin to use.
+        """
+
+        if text_align_x is None:
+            text_align_x = Alignments.CENTER
+
+        if text_align_y is None:
+            text_align_y = Alignments.CENTER
+
+        table = {
+            (Alignments.LEFT, Alignments.TOP): self.top_left,
+            (Alignments.CENTER, Alignments.TOP): self.top_center,
+            (Alignments.RIGHT, Alignments.TOP): self.top_right,
+
+            (Alignments.LEFT, Alignments.CENTER): self.center_left,
+            (Alignments.CENTER, Alignments.CENTER): self.center_center,
+            (Alignments.RIGHT, Alignments.CENTER): self.center_right,
+
+            (Alignments.LEFT, Alignments.BOTTOM): self.bottom_left,
+            (Alignments.CENTER, Alignments.BOTTOM): self.bottom_center,
+            (Alignments.RIGHT, Alignments.BOTTOM): self.bottom_right,
+        }
+
+
+        try:
+            function = table[(text_align_x, text_align_y)]
+        except KeyError:
+            raise ValueError(f"invalid text alignments. ({text_align_x}, {text_align_y}) are not a valid alignment pair.")
+
+        # function(text_rect, area_rect, margin)
+        return function(text_rect, area_rect, margin)
 
 
 text_align = AlignText()

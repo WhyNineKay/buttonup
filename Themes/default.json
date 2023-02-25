@@ -11,15 +11,27 @@
   "on-background": "#FFFFFF",
   "on-surface": "#FFFFFF",
   "on-error": "#000000",
-  "brightness-offsets": {
-    "pressed": -3,
-    "hovered": 3,
-    "hovered-outline": 10,
-    "disabled": -3,
-    "disabled-text": -60,
-    "slider-rail": 10
-  },
   "info": {
     "credits": "https://material.io/design/color/dark-theme.html#ui-application"
+  },
+  "elements": {
+    "button": {
+      "base": "#1c1c1c",
+      "hovered": "#282828",
+      "pressed": "#191919",
+      "disabled": "#191919",
+      "text": {
+        "base": "#E5E5E5",
+        "hovered": "#E5E5E5",
+        "pressed": "#E5E5E5",
+        "disabled": "#B7B7B7"
+      },
+      "outline": {
+        "base": "#202020",
+        "hovered": "#303030",
+        "pressed": "#1E1E1E",
+        "disabled": "#1E1E1E"
+      }
+    }
   }
 }

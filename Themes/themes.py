@@ -1,5 +1,6 @@
 from .. Utility import errors
 from .. import constants as c
+from dataclasses import dataclass as _dataclass
 import logging
 import json
 import sys
@@ -8,6 +9,30 @@ import os
 _log = logging.getLogger(__name__)
 
 _all_themes = []
+
+
+@_dataclass
+class ButtonThemeData:
+    """
+    Dataclass for the button theme data.
+    """
+
+    base: str
+    hovered: str
+    pressed: str
+    disabled: str
+
+    # text
+    text_base: str
+    text_hovered: str
+    text_pressed: str
+    text_disabled: str
+
+    # border
+    outline_base: str
+    outline_hovered: str
+    outline_pressed: str
+    outline_disabled: str
 
 
 class Theme:
@@ -45,8 +70,24 @@ class Theme:
             self.on_background = theme_dict["on-background"]
             self.on_surface = theme_dict["on-surface"]
             self.on_error = theme_dict["on-error"]
-            self.brightness_offsets = theme_dict["brightness-offsets"]
-        except KeyError:
+            self.button_data = ButtonThemeData(
+                base=theme_dict["elements"]["button"]["base"],
+                hovered=theme_dict["elements"]["button"]["hovered"],
+                pressed=theme_dict["elements"]["button"]["pressed"],
+                disabled=theme_dict["elements"]["button"]["disabled"],
+
+                text_base=theme_dict["elements"]["button"]["text"]["base"],
+                text_hovered=theme_dict["elements"]["button"]["text"]["hovered"],
+                text_pressed=theme_dict["elements"]["button"]["text"]["pressed"],
+                text_disabled=theme_dict["elements"]["button"]["text"]["disabled"],
+
+                outline_base=theme_dict["elements"]["button"]["outline"]["base"],
+                outline_hovered=theme_dict["elements"]["button"]["outline"]["hovered"],
+                outline_pressed=theme_dict["elements"]["button"]["outline"]["pressed"],
+                outline_disabled=theme_dict["elements"]["button"]["outline"]["disabled"]
+            )
+
+        except KeyError as e:
             _log.error(f"Theme dict is missing essential color elements for theme: '{name}'.")
             raise ValueError("Theme dict is missing essential color elements.")
 
@@ -57,6 +98,11 @@ class Theme:
 
         _log.debug(f"Created theme object '{name}'.")
 
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f"Theme({self.name})"
 
 def get_default_theme() -> Theme:
     """
@@ -118,7 +164,7 @@ def _get_theme_from_file(theme_name: str) -> dict | None:
         return data
 
     else:
-        raise ValueError(f"Theme '{theme_name}' not found. CWD: {os.getcwd()}")
+        raise ValueError(f"Theme '{theme_name}' not found.")
 
 
 def create_custom_theme(theme_dict: dict, name: str) -> Theme:
@@ -161,9 +207,9 @@ def reload() -> None:
     # ------------------------------------------
     themes = [
         "default",
-        "default_light",
-        "navy",
-        "powder_blue"
+        # "default_light",
+        # "navy",
+        # "powder_blue"
     ]
     # ------------------------------------------
 
@@ -175,7 +221,7 @@ def reload() -> None:
     _log.debug(f"Initialized {len(themes)} themes.")
 
 
-def get_all_themes() -> list:
+def get_all_themes() -> list[Theme]:
     """
     Gets all theme names.
     """
@@ -184,3 +230,6 @@ def get_all_themes() -> list:
 
 
 reload()
+
+
+# TODO: improve themes system
