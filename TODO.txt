@@ -1,0 +1,2 @@
+TODO: improve themes system
+TODO: rewrite all the elements :skull_emoji:

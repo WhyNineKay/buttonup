@@ -1,634 +1,368 @@
-import re
-from dataclasses import dataclass
-from typing import Any
-
-from ..Elements.element import Element
-from ..Utility.program_tools import check_tools, color_tools
+from ..Utility.program_tools import check_tools
+from ..Elements.element import NewElement
 from ..Themes import themes
-from ..Tools import colors
-from .. import constants
-
+from typing import Union, Tuple, Any
 import pygame
 
 
-class DefaultLabel(Element):
+class DefaultLabel(NewElement):
+    """
+    Simple label.
+
+    Makes using text in pygame a lot easier to use and manage.
+    """
+
     def __init__(self,
-                 pos_x: int,
-                 pos_y: int,
-                 text: str = "Hi!",
-                 text_size: int = 10,
-                 font: str | pygame.font.Font = "consolas",
-                 theme: themes.Theme = None,
-                 antialiasing: bool = True) -> None:
+                 pos_x: int, pos_y: int, theme: Union[themes.Theme, str] = None, text: str = None,
+                 text_size: int = None, font: Union[pygame.font.Font, str] = None, text_antialiasing: bool = None,
+                 ) -> None:
+        """
+        :param pos_x: X position of the label.
+        :param pos_y: Y position of the label.
+        :param theme: Theme to use for the label.
+        :param text: Text to display.
+        :param text_size: Size of the text. Will become redundant if font parameter is used.
+        :param font: Font to use for the text.
+        :param text_antialiasing: Whether to use antialiasing for the text.
+
+        :raises TypeError: If any of the arguments do not meet the required type.
+        :raises ValueError: If any of the arguments are not of the required value.
+        """
 
         super().__init__()
 
-        if check_tools.is_num(pos_x):
-            self._pos_x = int(pos_x)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
+        # -------- POSITION
+        if not check_tools.is_int(pos_x):
+            try:
+                pos_x = int(pos_x)
+            except ValueError:
+                raise TypeError(f"pos_x must be of type int, not '{type(pos_x)}'.")
+            else:
+                pass
 
-        if check_tools.is_num(pos_y):
-            self._pos_y = int(pos_y)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
+        self._pos_x = pos_x
 
-        if check_tools.is_str(text):
-            self._text = str(text)
-        else:
-            raise ValueError("text argument must be of type <str>.")
+        if not check_tools.is_int(pos_y):
+            try:
+                pos_y = int(pos_y)
+            except ValueError:
+                raise TypeError(f"pos_y must be of type int, not '{type(pos_y)}'.")
+            else:
+                pass
 
-        if check_tools.is_negative(text_size):
-            raise ValueError("text_size argument must be a positive int.")
-        elif check_tools.is_num(text_size):
-            self._text_size = int(text_size)
-        else:
-            raise ValueError("text_size argument must be of type <int> or <float>.")
+        self._pos_y = pos_y
 
-        # TODO: add font from file support
-        if check_tools.is_str(font):
-            self._font = pygame.font.SysFont(font, self._text_size)
-        elif isinstance(font, pygame.font.Font):
-            self._font = font
-        else:
-            raise ValueError("font argument must be of type <str>.")
-
-        self._font_name = font
+        # -------- THEME
 
         if theme is None:
-            self._theme = themes.get_default_theme()
-        elif isinstance(theme, themes.Theme):
-            self._theme = theme
+            theme = themes.get_default_theme()
         elif isinstance(theme, str):
-            self._theme = themes.get_theme(str(theme))
+            if theme in themes.get_all_themes():
+                theme = themes.get_theme(theme)
+            else:
+                raise ValueError(f"theme '{theme}' does not exist.")
         else:
-            raise ValueError("theme argument must be of type <str> or <Theme>.")
+            if not isinstance(theme, themes.Theme):
+                raise TypeError(f"theme must be of type themes.Theme or str, not '{type(theme)}'.")
 
-        if check_tools.is_bool(antialiasing):
-            self._antialiasing = antialiasing
+        self._theme = theme
+
+        # -------- TEXT
+
+        if text is None:
+            text = ""
         else:
-            raise ValueError("antialiasing argument must be of type <bool>.")
+            if not check_tools.is_str(text):
+                raise TypeError(f"text must be of type str, not '{type(text)}'.")
 
-        self._color_text = None
-        self._create_colors()
-        self._text_surface = self._font.render(self._text, self._antialiasing, self._theme.on_background)
+        self._text = text
 
-    def _create_colors(self) -> None:
-        self._color_text = self._theme.on_background
+        if text_size is None:
+            text_size = 20
+        else:
+            if not check_tools.is_int(text_size):
+                try:
+                    text_size = int(text_size)
+                except ValueError:
+                    raise TypeError(f"text_size must be of type int, not '{type(text_size)}'.")
+                else:
+                    pass
 
-    def render(self, screen: pygame.Surface) -> None:
-        """Renders the element to the screen."""
-        screen.blit(self._text_surface, (self._pos_x, self._pos_y))
+        self._text_size = text_size
 
-    def update(self, dt: float) -> None:
+        # -------- FONT
+
+        self._font_name: str | None = None
+
+        if font is None:
+            # font = self.theme.font (not implemented yet)
+            self._font_name = "Consolas"
+            font = pygame.font.SysFont(self._font_name, self._text_size)
+
+        elif isinstance(font, str):
+            self._font_name = font
+
+            if font in pygame.font.get_fonts():
+                font = pygame.font.SysFont(font, self._text_size)
+            else:
+                raise ValueError(f"font '{font}' does not exist in the system fonts.")
+        else:
+
+            if not isinstance(font, pygame.font.Font):
+                raise TypeError(f"font must be of type pygame.font.Font, not '{type(font)}'.")
+
+        self._font = font
+
+        if check_tools.is_bool(text_antialiasing):
+            self._text_antialiasing = text_antialiasing
+
+        elif text_antialiasing is None:
+            self._text_antialiasing = True
+
+        else:
+            raise TypeError(f"text_antialiasing must be of type bool, not '{type(text_antialiasing)}'.")
+
+        # -------- COLORS
+
+        self._color_text: str | None = None
+
+        # -------- MISC
+
+        self._text_surface: pygame.Surface | None = None
+        self._text_rect: pygame.Rect | None = None
+
+        self._load_colors()
+        self._render_text_surface()
+
+    def _load_colors(self) -> None:
         """
-        Updates the element.
-        :param dt: Delta time. Optional for some elements.
+        Loads the colors for the label.
         """
-        pass
+
+        self._text_color = self.theme.label_data.text_base
+
+    def _render_text_surface(self) -> None:
+        """
+        Renders/reloads the text surface.
+        """
+
+        self._text_surface = self._font.render(self._text, self._text_antialiasing, self._text_color)
+        self._text_rect = self._text_surface.get_rect()
+
+        self._text_rect.x = self._pos_x
+        self._text_rect.y = self._pos_y
+
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Draws the label onto the surface.
+
+        :param surface: Surface to draw the label onto.
+        """
+
+        surface.blit(self._text_surface, self._text_rect)
+
+    """
+    properties
+    pos_x get, pos_y get, pos get
+    pos_x set, pos_y set, pos set
+    center_x get, center_y get, center get
+    center_x set, center_y set, center set
+    
+    theme get, theme set
+    
+    width get, height get, size get
+    
+    text get, text set
+    text_size get, text_size set
+    text_antialiasing get, text_antialiasing set
+    
+    color_text get, color_text set
+    """
 
     @property
-    def text(self) -> str:
-        """
-        Get the text
-        """
-        return self._text
-
-    @text.setter
-    def text(self, value: str) -> None:
-        if not check_tools.is_str(value):
-            raise ValueError(f"text must be str not '{value}'.")
-
-        self._text = str(value)
-        self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
-
-    @property
-    def pos(self) -> tuple[int, int]:
-        """
-        Gets a tuple of the position of the label.
-        :return pos: The position.
-        """
-        return self._pos_x, self._pos_y
-
-    @pos.setter
-    def pos(self, value: tuple[int, int]) -> None:
-        """
-        Sets the position of the label.
-        :raises ValueError: If the position is invalid.
-        """
-
-        if not check_tools.is_pos(value):
-            raise ValueError(f"position must be tuple[int, int] not '{value}'.")
-
-        self._pos_x = value[0]
-        self._pos_y = value[1]
-
-    @property
-    def x(self) -> int:
-        """
-        Gets the x value of the label.
-        """
+    def pos_x(self) -> int:
         return self._pos_x
 
-    @x.setter
-    def x(self, value: int) -> None:
-        """
-        Set the x value of the label
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = int(value), self.pos[1]
-        else:
-            raise ValueError("x value must be of type <int> or <float>.")
-
     @property
-    def y(self) -> int:
-        """
-        Gets the x value of the label.
-        """
+    def pos_y(self) -> int:
         return self._pos_y
 
-    @y.setter
-    def y(self, value: int) -> None:
-        """
-        Set the x value of the label
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = self.pos[0], int(value)
-        else:
-            raise ValueError("y value must be of type <int> or <float>.")
+    @property
+    def pos(self) -> Tuple[int, int]:
+        return self._pos_x, self._pos_y
+
+    @pos_x.setter
+    def pos_x(self, value: int) -> None:
+        if not check_tools.is_int(value):
+            raise TypeError(f"pos_x must be of type int, not '{type(value)}'.")
+
+        self._pos_x = value
+        self._render_text_surface()
+
+    @pos_y.setter
+    def pos_y(self, value: int) -> None:
+        if not check_tools.is_int(value):
+            raise TypeError(f"pos_y must be of type int, not '{type(value)}'.")
+
+        self._pos_y = value
+        self._render_text_surface()
+
+    @pos.setter
+    def pos(self, pos: Tuple[int, int]) -> None:
+
+        # type checks
+
+        if not check_tools.is_tuple(pos):
+            raise TypeError(f"pos must be of type tuple, not '{type(pos)}'.")
+
+        # it is tuple
+
+        if len(pos) != 2:
+            raise ValueError(f"pos must contain two integers, not '{pos}'.")
+
+        # it is len 2
+
+        if not check_tools.is_int(pos[0]) or not check_tools.is_int(pos[1]):
+            raise TypeError(f"pos must contain two integers, not '{pos}'.")
+
+        # it is int tuple
+
+        self._pos_x = pos[0]
+        self._pos_y = pos[1]
+
+        self._render_text_surface()
 
     @property
-    def center(self) -> tuple[int, int]:
-        """
-        Gets the center of the label.
-        """
+    def center_x(self) -> int:
+        return self._text_rect.centerx
 
-        return self.text_surface.get_rect().center
+    @property
+    def center_y(self) -> int:
+        return self._text_rect.centery
+
+    @property
+    def center(self) -> Tuple[int, int]:
+        return self._text_rect.center
+
+    @center_x.setter
+    def center_x(self, value: int) -> None:
+        if not check_tools.is_int(value):
+            raise TypeError(f"center_x must be of type int, not '{type(value)}'.")
+
+        self._text_rect.centerx = value
+        self._pos_x = self._text_rect.x
+
+        self._render_text_surface()
+
+    @center_y.setter
+    def center_y(self, value: int) -> None:
+        if not check_tools.is_int(value):
+            raise TypeError(f"center_y must be of type int, not '{type(value)}'.")
+
+        self._text_rect.centery = value
+        self._pos_y = self._text_rect.y
+
+        self._render_text_surface()
 
     @center.setter
-    def center(self, value: tuple[int, int]) -> None:
-        """
-        Sets the center of the label.
-        """
+    def center(self, pos: Tuple[int, int]) -> None:
 
-        if not check_tools.is_pos(value):
-            raise ValueError(f"position must be tuple[int, int] not '{value}'.")
+        # type checks
 
-        self.pos = value[0] - self.text_surface.get_rect().center[0], value[1] - self.text_surface.get_rect().center[1]
+        if not isinstance(pos, tuple):
+            raise TypeError(f"center must be of type tuple, not '{type(pos)}'.")
 
-    @property
-    def antialiasing(self) -> bool:
-        """
-        Get whether the text is antialiased.
-        """
-        return self._antialiasing
+        # it is tuple
 
-    @antialiasing.setter
-    def antialiasing(self, value: bool) -> None:
-        """
-        Set antialiasing for the text.
-        :param value: Antialiasing
-        :raises ValueError: If the value is not a bool.
-        """
-        if check_tools.is_bool(value):
-            self._antialiasing = value
-        else:
-            raise ValueError("antialiasing argument must be of type <bool>.")
+        if len(pos) != 2:
+            raise ValueError(f"center must contain two integers, not '{pos}'.")
 
-        self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
+        # it is len 2
+
+        if not check_tools.is_int(pos[0]) or not check_tools.is_int(pos[1]):
+            raise TypeError(f"center must contain two integers, not '{pos}'.")
+
+        # it is int tuple
+
+        self._text_rect.center = pos
+        self._pos_x = self._text_rect.x
+        self._pos_y = self._text_rect.y
+
+        self._render_text_surface()
 
     @property
-    def text_surface(self) -> pygame.Surface:
-        """
-        Return the text surface.
-        :return:
-        """
-        return self._text_surface
+    def theme(self) -> themes.Theme:
+        return self._theme
 
-    def set_color(self, key: str, color: Any) -> None:
-        """
-        Set a certain color of the button.
+    @theme.setter
+    def theme(self, theme: themes.Theme) -> None:
+        if not isinstance(theme, themes.Theme):
+            raise TypeError(f"theme must be of type Theme, not '{type(theme)}'.")
 
-        :param key: The requested color. Must be one of: ["text"]. It is case insensitive.
-        :param color: The color to set.
-        """
-
-        # check if key is correct
-        colors_list = ['text']
-
-        if key.lower() not in colors_list:
-            raise ValueError(f"Invalid key '{key}'.", "invalid_key")
-
-        if not color_tools.is_color(color):
-            raise ValueError(f"Invalid color '{color}'.", "invalid_color")
-
-        key = key.lower()
-
-        if key == 'text':
-            self._color_text = color
-
-        self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
+        self._theme = theme
+        self._load_colors()
+        self._render_text_surface()
 
     @property
-    def text_size(self) -> int:
-        """
-        Get the size of the text.
-        """
+    def width(self) -> int:
+        return self._text_rect.width
 
-        return self._text_size
+    @property
+    def height(self) -> int:
+        return self._text_rect.height
 
-    @text_size.setter
-    def text_size(self, value: int) -> None:
-        """
-        Set the size of the text.
-        :param value: The size of the text.
-        :raises ValueError: If the value is not an int.
-        """
-
-        if check_tools.is_int(value):
-            self._text_size = value
-            self._font = pygame.font.SysFont(self._font_name, self._text_size)
-            self._text_surface = self._font.render(self._text, self._antialiasing, self._color_text)
-        else:
-            raise ValueError("text_size must be of type <int>.")
-
-
-@dataclass
-class _Chunk:
-    keyword: str | None
-    text: str
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def __str__(self) -> str:
-        return f"{self.keyword!r}:{self.text!r}"
-
-
-class ColoredLabel(Element):
-    def __init__(self,
-                 pos_x: int,
-                 pos_y: int,
-                 text: str = "Hi!",
-                 text_size: int = 10,
-                 font: str = "consolas",
-                 theme: themes.Theme = None,
-                 antialiasing: bool = True,
-                 color_palette: colors.ColorPalette = None) -> None:
-
-        super().__init__()
-
-        if check_tools.is_num(pos_x):
-            self._pos_x = int(pos_x)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
-
-        if check_tools.is_num(pos_y):
-            self._pos_y = int(pos_y)
-        else:
-            raise ValueError("position values must be of type <int> or <float>.")
-
-        if check_tools.is_str(text):
-            self._text = str(text)
-        else:
-            raise ValueError("text argument must be of type <str>.")
-
-        if check_tools.is_negative(text_size):
-            raise ValueError("text_size argument must be a positive int.")
-        elif check_tools.is_num(text_size):
-            self._text_size = int(text_size)
-        else:
-            raise ValueError("text_size argument must be of type <int> or <float>.")
-
-        # TODO: add font from file support
-        if check_tools.is_str(font):
-            self._font = pygame.font.SysFont(font, self._text_size)
-            self._font_name = font
-        else:
-            raise ValueError("font argument must be of type <str>.")
-
-        if theme is None:
-            self._theme = themes.get_default_theme()
-        elif isinstance(theme, themes.Theme):
-            self._theme = theme
-        elif isinstance(theme, str):
-            self._theme = themes.get_theme(str(theme))
-        else:
-            raise ValueError("theme argument must be of type <str> or <Theme>.")
-
-        if check_tools.is_bool(antialiasing):
-            self._antialiasing = antialiasing
-        else:
-            raise ValueError("antialiasing argument must be of type <bool>.")
-
-        if color_palette is None:
-            self._color_palette = colors.ColorPalette()
-        elif isinstance(color_palette, colors.ColorPalette):
-            self._color_palette = color_palette
-        else:
-            raise ValueError("color_palette argument must be of type <ColorPalette>.")
-
-        self._labels = []
-
-        self._create_colors()
-        self._create_labels()
-
-    def _create_colors(self) -> None:
-        """
-        Creates the colors for the text.
-        """
-        self._color_text = self._theme.on_background
-
-    def _create_labels(self) -> None:
-        """
-        Create individual labels with colors
-        """
-
-        keywords = list(self._color_palette.keyword_color_dict.keys())
-        keywords_regex_safe = [re.escape(keyword) for keyword in keywords]
-        string = self._text
-
-        # split string into chunks
-        string_chunks = re.split(r"(" + "|".join(keywords_regex_safe) + ")", string)
-        chunks: list[_Chunk] = []
-        self._labels.clear()
-
-        key = None
-        for chunk in string_chunks:
-
-            if chunk in keywords:
-                key = keywords[keywords.index(chunk)]
-            else:
-
-                chunks.append(_Chunk(key, chunk))
-
-        # create labels
-        current_x = self._pos_x
-
-        for chunk in chunks:
-            if chunk.keyword is None:
-                color = self._color_text
-            else:
-                color = self._color_palette.keyword_color_dict[chunk.keyword]
-
-            if color == constants.COLOR_RESET:
-                color = self._color_text
-
-            label = DefaultLabel(pos_x=current_x, pos_y=self._pos_y, text=chunk.text, text_size=self._text_size,
-                                 font=self._font_name, theme=self._theme, antialiasing=self._antialiasing)
-
-            label.set_color("text", color)
-
-            self._labels.append(label)
-
-            current_x += label.text_surface.get_width()
-
-    def _on_prop_update(self) -> None:
-        """
-        Executes when a property updates, such as position change, or text change.
-        """
-        self._create_labels()
-
-    def render(self, surface: pygame.Surface) -> None:
-        """
-        Render the text to the surface.
-        :param surface: Surface to render to.
-        """
-        for label in self._labels:
-            label.render(surface)
-
-    def update(self, dt: float) -> None:
-        """
-        Updates the element.
-        :param dt: Delta time. Optional for some elements.
-        """
-        pass
+    @property
+    def size(self) -> Tuple[int, int]:
+        return self._text_rect.size
 
     @property
     def text(self) -> str:
-        """
-        Get the text of all the labels. Includes color keywords.
-        :return: The text.
-        """
         return self._text
 
     @text.setter
     def text(self, text: str) -> None:
-        """
-        Set the text of the label.
-        You can use color keywords in the text.
-        :param text: The text.
-        """
+        if not check_tools.is_str(text):
+            raise TypeError(f"text must be of type str, not '{type(text)}'.")
 
-        if check_tools.is_str(text):
-            self._text = str(text)
-        else:
-            raise ValueError("text argument must be of type <str>.")
-
-        self._on_prop_update()
-
-    @property
-    def keywordless_text(self) -> str:
-        """
-        Get the text of all the labels, excluding any color keywords.
-        :return: The text.
-        """
-        return "".join([label._text for label in self._labels])
-
-    @property
-    def pos(self) -> tuple[int, int]:
-        """
-        Gets a tuple of the position of the label.
-        :return pos: The position.
-        """
-        return self._pos_x, self._pos_y
-
-    @pos.setter
-    def pos(self, value: tuple[int, int]) -> None:
-        """
-        Sets the position of the label.
-        :raises ValueError: If the position is invalid.
-        """
-
-        if not check_tools.is_pos(value):
-            raise ValueError(f"position must be tuple[int, int] not '{value}'.")
-
-        self._pos_x = value[0]
-        self._pos_y = value[1]
-
-        self._on_prop_update()
-
-    @property
-    def x(self) -> int:
-        """
-        Gets the x value of the label.
-        """
-        return self._pos_x
-
-    @x.setter
-    def x(self, value: int) -> None:
-        """
-        Set the x value of the label
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = int(value), self.pos[1]
-        else:
-            raise ValueError("x value must be of type <int> or <float>.")
-
-        self._on_prop_update()
-
-    @property
-    def y(self) -> int:
-        """
-        Gets the x value of the label.
-        """
-        return self._pos_y
-
-    @y.setter
-    def y(self, value: int) -> None:
-        """
-        Set the x value of the label
-        :raises ValueError: If the value is not an int or float.
-        """
-        if check_tools.is_num(value):
-            self.pos = self.pos[0], int(value)
-        else:
-            raise ValueError("y value must be of type <int> or <float>.")
-
-        self._on_prop_update()
-
-    @property
-    def antialiasing(self) -> bool:
-        """
-        Get whether the text is anti-aliased.
-        """
-        return self._antialiasing
-
-    @antialiasing.setter
-    def antialiasing(self, value: bool) -> None:
-        """
-        Set whether the text is anti-aliased.
-        """
-        if check_tools.is_bool(value):
-            self._antialiasing = value
-        else:
-            raise ValueError("antialiasing must be of type <bool>.")
-
-        self._on_prop_update()
-
-    @property
-    def individual_labels(self) -> list[DefaultLabel]:
-        """
-        Get the individual labels that construct the text colors.
-        :return: The labels.
-        """
-        return self._labels
-
-    @property
-    def width(self) -> int:
-        """
-        Get the width of the text.
-        :return: The width.
-        """
-        return sum([label._width for label in self._labels])
-
-    @property
-    def height(self) -> int:
-        """
-        Get the height of the text.
-        :return: The height.
-        """
-        return max([label.text_surface.get_height() for label in self._labels])
-
-    @property
-    def size(self) -> tuple[int, int]:
-        """
-        Get the size of the text.
-        :return: The size.
-        """
-        return self.width, self.height
-
-    @property
-    def color_palette(self) -> colors.ColorPalette:
-        """
-        Get the color palette.
-        :return: The color palette.
-        """
-        return self._color_palette
-
-    @color_palette.setter
-    def color_palette(self, value: colors.ColorPalette) -> None:
-        """
-        Set the color palette.
-        :param value: The color palette.
-        """
-
-        if check_tools.is_color_palette(value):
-            self._color_palette = value
-        else:
-            raise ValueError("color_palette must be of type <ColorPalette>.")
-
-        self._on_prop_update()
+        self._text = text
+        self._render_text_surface()
 
     @property
     def text_size(self) -> int:
-        """
-        Get the text size.
-        :return: The text size.
-        """
         return self._text_size
 
     @text_size.setter
-    def text_size(self, value: int) -> None:
-        """
-        Set the text size.
-        :param value: The text size.
-        """
+    def text_size(self, text_size: int) -> None:
+        if not check_tools.is_int(text_size):
+            raise TypeError(f"text_size must be of type int, not '{type(text_size)}'.")
 
-        if check_tools.is_num(value):
-            self._text_size = int(value)
-        elif check_tools.is_negative(value):
-            raise ValueError("text_size must be a positive number.")
-        else:
-            raise ValueError("text_size must be of type <int> or <float>.")
+        self._text_size = text_size
 
-        self._on_prop_update()
+        if self._font_name is not None:
+            self._font = pygame.font.SysFont(self._font_name, self._text_size)
+
+        self._render_text_surface()
 
     @property
-    def theme(self) -> themes.Theme:
-        """
-        Gets the current theme that the object is using.
-        :return: Theme object.
-        """
-        return self._theme
+    def text_antialiasing(self) -> bool:
+        return self._text_antialiasing
 
-    @theme.setter
-    def theme(self, value: themes.Theme | str) -> None:
-        """
-        Sets the theme and reloads the colors.
-        Returns the default theme if it is not found.
+    @text_antialiasing.setter
+    def text_antialiasing(self, text_antialiasing: bool) -> None:
+        if not check_tools.is_bool(text_antialiasing):
+            raise TypeError(f"text_antialiasing must be of type bool, not '{type(text_antialiasing)}'.")
 
-        :param value: Theme object or the name of the theme.
-        :raises ValueError: If theme object is not a valid theme.
-        """
+        self._text_antialiasing = text_antialiasing
+        self._render_text_surface()
 
-        if not isinstance(value, themes.Theme) and not isinstance(value, str):
-            raise ValueError("Invalid theme. Use a Theme object theme or a string of the name of the theme.")
+    @property
+    def color_text(self) -> Any:
+        return self._color_text
 
-        if isinstance(value, themes.Theme):
-            theme = value
+    @color_text.setter
+    def color_text(self, value: Any) -> None:
+        if not check_tools.is_color(value):
+            raise TypeError(f"color_hovered must be rgb, hex, or pygame.Color, not '{value}'.")
 
-        elif isinstance(value, str):
-            # it is a string
-            theme = themes.get_theme(value)
-
-        else:
-            theme = themes.get_default_theme()
-
-        self._theme = theme
-
-        self._create_colors()
-        self._on_prop_update()
+        self._color_text = value
+        self._render_text_surface()

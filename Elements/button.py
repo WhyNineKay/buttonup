@@ -12,6 +12,14 @@ log = logging.getLogger(__name__)
 
 
 class DefaultButton(NewElement):
+    """
+    A button that has many features, such as:
+     - text alignment
+     - theme support
+     - on hover, and on click
+     and more!
+
+    """
     def __init__(self, pos_x: int, pos_y: int, width: int = None, height: int = None,
                  theme: Union[themes.Theme, str] = None, text: str = None, text_size: int = None,
                  font: Union[pygame.font.Font, str] = None, text_antialiasing: bool = None,
@@ -22,21 +30,16 @@ class DefaultButton(NewElement):
                  on_hover_function: Callable = None, on_hover_function_args: list | tuple = None,
                  on_hover_function_kwargs: dict = None, cursor_change_hover: bool = None) -> None:
         """
-        The new version of the buttonup default button.
-
-        A simple button that when clicked, will do something!
-
-        :param pos_x: The integer x position of the button in pixels.
-        :param pos_y: The integer y position of the button in pixels.
-        :param width: The width of the button in pixels, defaults to 100.
-        :param height: The height of the button in pixels, defaults to 40.
+        :param pos_x: The x position of the button.
+        :param pos_y: The y position of the button.
+        :param width: The width of the button.
+        :param height: The height of the button.
 
         :param theme: The theme of the button, defaults to the current project theme. (globs.project_theme)
-        :param text: The text that is displayed on the button. It is entirely optional, if you wish to use an
-            image instead. Defaults to an empty string ('').
+        :param text: The text that is displayed on the button. Defaults to an empty string ('').
 
         :param text_size: The size of the text in pixels, defaults to 20.
-        :param font: The font of the text. Defaults to the specified theme's font.
+        :param font: The font of the text.
         :param text_antialiasing: Choose whether the text is anti-aliased. Defaults to True.
 
         :param text_alignment_x: The alignment of the text on the button in the x direction. Defaults to
@@ -48,10 +51,9 @@ class DefaultButton(NewElement):
         :param text_alignment_margin: The margin of the text in pixels, from the top-left of the button.
             Defaults to 10.
 
-        :param border_radius: How much the corners are rounded on the button, in pixels. If set to 0, The corners
-            will be square and sharp. Any integer above 0, the corners will be rounded. Defaults to 0.
+        :param border_radius: How much the corners are rounded on the button, in pixels.
 
-        :param border_width: The width of the border of the button, in pixels. Defaults to 0.
+        :param border_width: The width of the border of the button, in pixels.
 
         :param on_click_function: The function to be called when the button is clicked. Defaults to None.
         :param on_click_function_args: The args to put into the on_click_function when called. Defaults to [].
@@ -67,8 +69,9 @@ class DefaultButton(NewElement):
         :raises ValueError: If any of the arguments are not of the required value.
         """
 
-        # -------- POSITION
         super().__init__()
+
+        # -------- POSITION
         if not check_tools.is_int(pos_x):
             try:
                 pos_x = int(pos_x)
@@ -157,16 +160,20 @@ class DefaultButton(NewElement):
 
         # -------- FONT
 
+        self._font_name: str | None = None
+
         if font is None:
             # font = self.theme.font (not implemented yet)
-            font = pygame.font.SysFont("Consolas", self._text_size)
+            self._font_name = "Consolas"
+            font = pygame.font.SysFont(self._font_name, self._text_size)
 
         elif isinstance(font, str):
+            self._font_name = font
+
             if font in pygame.font.get_fonts():
                 font = pygame.font.SysFont(font, self._text_size)
             else:
                 raise ValueError(f"font '{font}' does not exist in the system fonts.")
-
         else:
 
             if not isinstance(font, pygame.font.Font):
@@ -697,19 +704,6 @@ class DefaultButton(NewElement):
         self._render_text_surface()
 
     @property
-    def font(self) -> pygame.font.Font:
-        return self._font
-
-    @font.setter
-    def font(self, font: pygame.font.Font) -> None:
-        # type checks
-        if not check_tools.is_font(font):
-            raise TypeError(f"font must be of type pygame.font.Font, not '{type(font)}'.")
-
-        self._font = font
-        self._render_text_surface()
-
-    @property
     def text_size(self) -> int:
         return self._text_size
 
@@ -720,6 +714,10 @@ class DefaultButton(NewElement):
             raise TypeError(f"text_size must be of type int, not '{type(text_size)}'.")
 
         self._text_size = text_size
+
+        if self._font_name is not None:
+            self._font = pygame.font.SysFont(self._font_name, self._text_size)
+
         self._render_text_surface()
 
     @property
@@ -854,7 +852,7 @@ class DefaultButton(NewElement):
         try:
             value = c.States(value)
         except ValueError:
-            raise ValueError(f"state must be of type States, not '{type(value)}'.")
+            raise TypeError(f"state must be of type States, not '{type(value)}'.")
 
         self._state = value
 
@@ -867,7 +865,7 @@ class DefaultButton(NewElement):
     @color_base.setter
     def color_base(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_base must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_base must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_base = value
 
@@ -878,7 +876,7 @@ class DefaultButton(NewElement):
     @color_outline.setter
     def color_outline(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_outline must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_outline = value
 
@@ -889,7 +887,7 @@ class DefaultButton(NewElement):
     @color_text.setter
     def color_text(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_text must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_text must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_text = value
 
@@ -902,7 +900,7 @@ class DefaultButton(NewElement):
     @color_disabled.setter
     def color_disabled(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_disabled must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_disabled must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_disabled = value
 
@@ -913,7 +911,7 @@ class DefaultButton(NewElement):
     @color_disabled_outline.setter
     def color_disabled_outline(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_disabled_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_disabled_outline must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_disabled_outline = value
 
@@ -924,7 +922,7 @@ class DefaultButton(NewElement):
     @color_disabled_text.setter
     def color_disabled_text(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_disabled_text must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_disabled_text must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_disabled_text = value
 
@@ -937,7 +935,7 @@ class DefaultButton(NewElement):
     @color_pressed.setter
     def color_pressed(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_pressed must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_pressed must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_pressed = value
 
@@ -948,7 +946,7 @@ class DefaultButton(NewElement):
     @color_pressed_outline.setter
     def color_pressed_outline(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_pressed_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_pressed_outline must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_pressed_outline = value
 
@@ -959,7 +957,7 @@ class DefaultButton(NewElement):
     @color_hovered.setter
     def color_hovered(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_hovered must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_hovered must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_hovered = value
 
@@ -970,7 +968,7 @@ class DefaultButton(NewElement):
     @color_hovered_outline.setter
     def color_hovered_outline(self, value: Any) -> None:
         if not color_tools.is_color(value):
-            raise ValueError(f"color_hovered_outline must be rgb, hex, or pygame.Color, not '{value}'.")
+            raise TypeError(f"color_hovered_outline must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_hovered_outline = value
 

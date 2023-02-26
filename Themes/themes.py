@@ -35,6 +35,15 @@ class ButtonThemeData:
     outline_disabled: str
 
 
+@_dataclass
+class LabelThemeData:
+    """
+    Dataclass for the label theme data.
+    """
+
+    text_base: str
+
+
 class Theme:
     def __init__(self, theme_dict: dict, name: str) -> None:
         """
@@ -85,6 +94,9 @@ class Theme:
                 outline_hovered=theme_dict["elements"]["button"]["outline"]["hovered"],
                 outline_pressed=theme_dict["elements"]["button"]["outline"]["pressed"],
                 outline_disabled=theme_dict["elements"]["button"]["outline"]["disabled"]
+            )
+            self.label_data = LabelThemeData(
+                text_base=theme_dict["elements"]["label"]["text"]["base"]
             )
 
         except KeyError as e:

@@ -32,6 +32,11 @@
         "pressed": "#1E1E1E",
         "disabled": "#1E1E1E"
       }
+    },
+    "label": {
+      "text": {
+        "base": "#E5E5E5"
+      }
     }
   }
 }

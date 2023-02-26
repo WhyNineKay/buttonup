@@ -1,8 +1,8 @@
-import logging
+import random
 
-import buttonup
-import constants
 from buttonup.constants import States, Alignments
+import logging
+import buttonup
 import pygame
 import time
 
@@ -47,8 +47,10 @@ class Test:
         self.button_7 = buttonup.button.DefaultButton(400, 200, width=130, height=40, text="7",
                                                       border_radius=0)
 
+        self.label_1 = buttonup.label.DefaultLabel(100, 500, text="Hello World! This is a label.", text_size=40)
+
         self.elements = [self.button_1, self.button_2, self.button_3, self.button_4,
-                         self.button_5, self.button_6, self.button_7]
+                         self.button_5, self.button_6, self.button_7, self.label_1]
 
     def update(self) -> None:
         for e in self.elements:
@@ -86,7 +88,7 @@ class Test:
             self.events()
             self.update()
             self.draw()
-            # self.dt = self.clock.tick(60)
+            self.dt = self.clock.tick(60) / 1000
 
         time_end = time.time()
 
