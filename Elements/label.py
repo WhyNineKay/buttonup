@@ -1,4 +1,4 @@
-from ..Utility.program_tools import check_tools
+from ..Utility.program_tools import check_tools, color_tools
 from ..Elements.element import NewElement
 from ..Themes import themes
 from typing import Union, Tuple, Any
@@ -139,14 +139,14 @@ class DefaultLabel(NewElement):
         Loads the colors for the label.
         """
 
-        self._text_color = self.theme.label_data.text_base
+        self._color_text = self.theme.label_data.text_base
 
     def _render_text_surface(self) -> None:
         """
         Renders/reloads the text surface.
         """
 
-        self._text_surface = self._font.render(self._text, self._text_antialiasing, self._text_color)
+        self._text_surface = self._font.render(self._text, self._text_antialiasing, self._color_text)
         self._text_rect = self._text_surface.get_rect()
 
         self._text_rect.x = self._pos_x
@@ -160,24 +160,6 @@ class DefaultLabel(NewElement):
         """
 
         surface.blit(self._text_surface, self._text_rect)
-
-    """
-    properties
-    pos_x get, pos_y get, pos get
-    pos_x set, pos_y set, pos set
-    center_x get, center_y get, center get
-    center_x set, center_y set, center set
-    
-    theme get, theme set
-    
-    width get, height get, size get
-    
-    text get, text set
-    text_size get, text_size set
-    text_antialiasing get, text_antialiasing set
-    
-    color_text get, color_text set
-    """
 
     @property
     def pos_x(self) -> int:
@@ -361,7 +343,7 @@ class DefaultLabel(NewElement):
 
     @color_text.setter
     def color_text(self, value: Any) -> None:
-        if not check_tools.is_color(value):
+        if not color_tools.is_color(value):
             raise TypeError(f"color_hovered must be rgb, hex, or pygame.Color, not '{value}'.")
 
         self._color_text = value

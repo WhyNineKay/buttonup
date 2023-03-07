@@ -17,7 +17,7 @@
   "elements": {
     "button": {
       "base": "#1c1c1c",
-      "hovered": "#282828",
+      "hovered": "#242424",
       "pressed": "#191919",
       "disabled": "#191919",
       "text": {
