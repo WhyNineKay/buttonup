@@ -4,6 +4,7 @@ from .. Themes import themes
 
 import pygame
 
+raise NotImplementedError("Textbox class has not yet been updated.")
 
 class DefaultTextBox(element.Element):
     def __init__(self,

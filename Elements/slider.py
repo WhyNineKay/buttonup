@@ -10,6 +10,8 @@ import pygame
 log = logging.getLogger(__name__)
 
 
+raise NotImplementedError("Slider class has not yet been updated.")
+
 class DefaultSlider(Element):
     def __init__(self,
                  pos_x: int,
