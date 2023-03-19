@@ -1,6 +1,6 @@
-from .. Utility.program_tools import check_tools
-from .. Elements import element
-from .. Themes import themes
+from .. utility.program_tools import check_tools
+from .. elements import element
+from .. themes import themes
 
 import pygame
 

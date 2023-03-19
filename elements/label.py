@@ -1,6 +1,6 @@
-from ..Utility.program_tools import check_tools, color_tools
-from ..Elements.element import NewElement
-from ..Themes import themes
+from ..utility.program_tools import check_tools, color_tools
+from ..elements.element import NewElement
+from ..themes import themes
 from typing import Union, Tuple, Any
 import pygame
 
@@ -192,22 +192,8 @@ class DefaultLabel(NewElement):
     @pos.setter
     def pos(self, pos: Tuple[int, int]) -> None:
 
-        # type checks
-
-        if not check_tools.is_tuple(pos):
+        if not check_tools.is_pos(pos):
             raise TypeError(f"pos must be of type tuple, not '{type(pos)}'.")
-
-        # it is tuple
-
-        if len(pos) != 2:
-            raise ValueError(f"pos must contain two integers, not '{pos}'.")
-
-        # it is len 2
-
-        if not check_tools.is_int(pos[0]) or not check_tools.is_int(pos[1]):
-            raise TypeError(f"pos must contain two integers, not '{pos}'.")
-
-        # it is int tuple
 
         self._pos_x = pos[0]
         self._pos_y = pos[1]

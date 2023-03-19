@@ -2,11 +2,11 @@ import logging
 from typing import Callable, Union, Tuple, Any
 
 import pygame
-from ..Themes.themes import Theme
+from ..themes.themes import Theme
 from .. import constants as c
-from ..Elements.element import NewElement
-from ..Themes import themes
-from ..Utility.program_tools import check_tools, text_align, color_tools
+from ..elements.element import NewElement
+from ..themes import themes
+from ..utility.program_tools import check_tools, text_align, color_tools
 
 log = logging.getLogger(__name__)
 
@@ -557,23 +557,8 @@ class DefaultButton(NewElement):
 
     @pos.setter
     def pos(self, pos: Tuple[int, int]) -> None:
-
-        # type checks
-
-        if not check_tools.is_tuple(pos):
+        if not check_tools.is_pos(pos):
             raise TypeError(f"pos must be of type tuple, not '{type(pos)}'.")
-
-        # it is tuple
-
-        if len(pos) != 2:
-            raise ValueError(f"pos must contain two integers, not '{pos}'.")
-
-        # it is len 2
-
-        if not check_tools.is_int(pos[0]) or not check_tools.is_int(pos[1]):
-            raise TypeError(f"pos must contain two integers, not '{pos}'.")
-
-        # it is int tuple
 
         self._update_position(pos[0], pos[1])
 

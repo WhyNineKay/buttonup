@@ -1,4 +1,4 @@
-from Utility.program_tools import color_tools, check_tools
+from utility.program_tools import color_tools, check_tools
 import unittest
 import pygame
 

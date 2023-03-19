@@ -1,4 +1,4 @@
-from ..Themes import themes
+from ..themes import themes
 import logging
 import pygame
 

@@ -1,7 +1,7 @@
-from ..Utility.program_tools import check_tools, color_tools
-from ..Elements.element import Element
-from ..Elements import button
-from ..Themes import themes
+from ..utility.program_tools import check_tools, color_tools
+from ..elements.element import Element
+from ..elements import button
+from ..themes import themes
 from .. import constants as c
 
 import logging

@@ -1,7 +1,7 @@
-from .Elements import button
-from .Elements import label
-from .Themes import themes
-from .Tools import colors
+from .elements import button
+from .elements import label
+from .themes import themes
+from .tools import colors
 from .constants import States
 
 import pygame
