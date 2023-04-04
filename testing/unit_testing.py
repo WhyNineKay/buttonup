@@ -37,7 +37,6 @@ class CheckToolsTesting(unittest.TestCase):
 
 
 
-
 class ColorToolsIsColorTest(unittest.TestCase):
     def test_rgb_tuple(self):
         self.assertEqual(color_tools.is_color((0, 0, 0)), True)

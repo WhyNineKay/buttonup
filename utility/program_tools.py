@@ -84,6 +84,17 @@ class CheckTools:
 
             return True
 
+    @staticmethod
+    def is_tuple(case: Any) -> bool:
+        return isinstance(case, tuple)
+
+    @staticmethod
+    def is_dict(case: Any) -> bool:
+        return isinstance(case, dict)
+
+    @staticmethod
+    def is_list(case: Any) -> bool:
+        return isinstance(case, list)
 
 check_tools = CheckTools()
 

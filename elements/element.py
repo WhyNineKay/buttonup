@@ -70,6 +70,9 @@ class Element:
 
 
 class NewElement:
+    def __init__(self) -> None:
+        self._theme = themes.get_default_theme()
+
     def render(self) -> None:
         """
         Renders the element.

@@ -21,7 +21,7 @@ class DefaultButton(NewElement):
 
     """
     def __init__(self, pos_x: int, pos_y: int, width: int = None, height: int = None,
-                 theme: Union[themes.Theme, str] = None, text: str = None, text_size: int = None,
+                 theme: Union[Theme, str] = None, text: str = None, text_size: int = None,
                  font: Union[pygame.font.Font, str] = None, text_antialiasing: bool = None,
                  text_alignment_x: c.Alignments = None, text_alignment_y: c.Alignments = None,
                  text_alignment_margin: int = None, border_radius: int = None,
