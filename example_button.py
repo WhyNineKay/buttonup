@@ -1,6 +1,5 @@
 import pygame
 import buttonup
-import constants
 from buttonup.utils import CallbackPackage, Alignment
 
 WINDOW_WIDTH = 1920
@@ -100,10 +99,10 @@ class MainWindow:
             self.button.text_alignment = Alignment.CENTER
         if 8.5 >= self.timer >= 8.0:
             self.button.text = "BIG!"
-            self.button.font_size = constants.DEFAULT_FONT_SIZE * 4
+            self.button.font_size = buttonup.constants.DEFAULT_FONT_SIZE * 4
         if 9.0 >= self.timer >= 8.5:
             self.button.text = "disabled :("
-            self.button.font_size = constants.DEFAULT_FONT_SIZE
+            self.button.font_size = buttonup.constants.DEFAULT_FONT_SIZE
             self.button.text_alignment = Alignment.CENTER
             self.button.disable()
 

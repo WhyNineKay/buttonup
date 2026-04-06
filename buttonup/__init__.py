@@ -3,3 +3,4 @@ from . import theme
 from .elements.label import Label
 from .elements.button import TextButton, ImageButton, SpriteButton
 from . import richtext
+from . import constants

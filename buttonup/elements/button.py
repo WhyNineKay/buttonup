@@ -15,7 +15,6 @@ from .element import Element, ResizableElement, InteractiveElement, ThemedElemen
 
 class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
     """Base button class"""
-
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
