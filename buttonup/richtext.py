@@ -131,7 +131,7 @@ class RichText(FontElement):
 
     @property
     def rendered_forms(self) -> List[RenderFormText]:
-        return self._rendered_forms
+        return self._rendered_forms.copy()
 
     def render(self) -> None:
         rendered_forms: List[RenderFormText] = []
