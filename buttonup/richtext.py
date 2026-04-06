@@ -45,7 +45,7 @@ class TextStyle:
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TextStyle):
-            return NotImplemented
+            raise NotImplementedError(f"Cannot compare TextStyle with {type(other)}.")
         return (
                 self.color == other.color
                 and self.background_color == other.background_color
