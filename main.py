@@ -20,19 +20,25 @@ class MainWindow:
 
         self.dt = 0.0
 
-        self.parser = InlineDeveloperParser()
+        self.parser = InlineDeveloperParser(f"&lWho&r &cw&4o&6u&cl&ed &#7f9200ha&rve &B3thought?&r {self.generate_color_spectrum()}")
 
         self.rich_text = RichText(
-            spans=self.parser.parse("&!Hello&l&r world"), font_size=30
+            spans=self.parser.parse(), font_size=30
         )
 
         self.rich_text.render()
+
+    def generate_color_spectrum(self) -> str:
+        string = ""
+        for c in InlineDeveloperParser.COLOR_CODE_MAPPING.keys():
+            string += f"&{c}#"
+        return string
 
     def draw(self) -> None:
         self.window.fill(self.theme.color.background)
 
         x = 50
-        for rendered_form in self.rich_text.render():
+        for rendered_form in self.rich_text.rendered_forms:
             self.window.blit(rendered_form.surface, (x, 100))
             x += rendered_form.width
 

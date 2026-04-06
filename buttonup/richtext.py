@@ -1,6 +1,7 @@
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import SupportsInt, Dict, Tuple, List, Union
+from typing import SupportsInt, Dict, Tuple, List, Union, Optional, Literal
 
 import pygame
 
@@ -10,10 +11,21 @@ from .elements.element import FontElement
 from .utils import ColorTools
 
 
+class _DefaultColorFlag:
+    def __repr__(self) -> str:
+        return "<DEFAULT_COLOR_FLAG>"
+
+    def __str__(self) -> str:
+        return "<DEFAULT_COLOR_FLAG>"
+
+
+DEFAULT_COLOR_FLAG = _DefaultColorFlag()
+
+
 @dataclass
 class TextStyle:
-    color: RGB = None
-    background_color: RGB = None
+    color: Union[RGB, _DefaultColorFlag] = None
+    background_color: Union[RGB, _DefaultColorFlag] = None
     bold: bool = None
     italic: bool = None
     underline: bool = None
@@ -31,24 +43,45 @@ class TextStyle:
     def get_strikethrough(self) -> bool:
         return self.strikethrough if self.strikethrough is not None else False
 
-    def merge(self, other: 'TextStyle') -> 'TextStyle':
-        """
-        Merge another TextStyle into this one, with the other style taking precedence for any non-None attributes.
-        """
-        return TextStyle(
-            color=other.color if other.color is not None else self.color,
-            background_color=other.background_color if other.background_color is not None else self.background_color,
-            bold=other.bold if other.bold is not None else self.bold,
-            italic=other.italic if other.italic is not None else self.italic,
-            underline=other.underline if other.underline is not None else self.underline,
-            strikethrough=other.strikethrough if other.strikethrough is not None else self.strikethrough
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TextStyle):
+            return NotImplemented
+        return (
+                self.color == other.color
+                and self.background_color == other.background_color
+                and self.bold == other.bold
+                and self.italic == other.italic
+                and self.underline == other.underline
+                and self.strikethrough == other.strikethrough
         )
+
+    def __repr__(self) -> str:
+        # Print values only if not None
+        fields = []
+        if self.color is not None:
+            fields.append(f"color={self.color}")
+        if self.background_color is not None:
+            fields.append(f"background_color={self.background_color}")
+        if self.bold is not None:
+            fields.append(f"bold={self.bold}")
+        if self.italic is not None:
+            fields.append(f"italic={self.italic}")
+        if self.underline is not None:
+            fields.append(f"underline={self.underline}")
+        if self.strikethrough is not None:
+            fields.append(f"strikethrough={self.strikethrough}")
+        return f"TextStyle({', '.join(fields)})"
 
 
 @dataclass(slots=True)
 class TextSpan:
     text: str
     style: TextStyle
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TextSpan):
+            return NotImplemented
+        return self.text == other.text and self.style == other.style
 
 
 @dataclass(slots=True)
@@ -59,7 +92,8 @@ class RenderFormText:
 
 
 class RichText(FontElement):
-    def __init__(self, spans: list[TextSpan], font: FontLike = None, font_size: SupportsInt = None, default_text_color: ColorLike = None) -> None:
+    def __init__(self, spans: list[TextSpan], font: FontLike = None, font_size: SupportsInt = None,
+                 default_text_color: ColorLike = None) -> None:
         if font is None:
             font = constants.DEFAULT_FONT_NAME
 
@@ -74,6 +108,9 @@ class RichText(FontElement):
         self._default_text_color = self._parse_text_color(default_text_color)
 
         self._spans = spans
+
+        self._rendered_forms: List[RenderFormText] = []
+        self.render()
 
     def _parse_text_color(self, color: ColorLike) -> RGB:
         if ColorTools.is_color(color):
@@ -93,16 +130,35 @@ class RichText(FontElement):
 
         pygame.draw.line(surface, color, (0, strike_y), (surface.get_width(), strike_y), strike_width)
 
-    def render(self) -> List[RenderFormText]:
+    @property
+    def rendered_forms(self) -> List[RenderFormText]:
+        return self._rendered_forms
+
+    def render(self) -> None:
         rendered_forms: List[RenderFormText] = []
 
         for span in self._spans:
             self._set_font_parameters(span.style)
+
+
+            if span.style.color == DEFAULT_COLOR_FLAG or span.style.color is None:
+                foreground_color = self._default_text_color
+            else:
+                foreground_color = span.style.color
+
+            if span.style.background_color == DEFAULT_COLOR_FLAG or span.style.background_color is None:
+                background_color = None
+            else:
+                background_color = span.style.background_color
+
+            print(f"{background_color=}")
+            print(f"{foreground_color=}")
+
             text_surface = self._font.render(
                 span.text,
                 True,
-                span.style.color if span.style.color is not None else self._default_text_color,
-                span.style.background_color
+                foreground_color,
+                background_color
             )
 
             if span.style.get_strikethrough():
@@ -114,7 +170,7 @@ class RichText(FontElement):
                 width=text_surface.get_width()
             ))
 
-        return rendered_forms
+        self._rendered_forms = rendered_forms
 
     def _update_font_and_size(self, font: FontLike, font_size: SupportsInt) -> None:
         super()._update_font_and_size(font, font_size)
@@ -123,7 +179,7 @@ class RichText(FontElement):
 
 class RichTextParser(ABC):
     @abstractmethod
-    def parse(self, text: str) -> List[TextSpan]:
+    def parse(self) -> List[TextSpan]:
         pass
 
 
@@ -168,9 +224,8 @@ class InlineDeveloperParser(RichTextParser):
     character is '&'.
     - &B: Background color, followed by a single character code. For example, &B4 would set the background color to dark
     red.
-    - &x: Followed by 6 hexadecimal digits, sets the text color to the specified RGB value. For example, &xFF0000
-    - &X: Followed by 6 hexadecimal digits, sets the background color to the specified RGB value.
-    - &!: Rainbow text
+    - &#: Followed by 6 hexadecimal digits, sets the text color to the specified RGB value. For example, &#FF0000
+    - &B#: Followed by 6 hexadecimal digits, sets the background color to the specified RGB value. For example, &B#00FF00.
     """
 
     DEFAULT_OPERATION_CHARACTER = "&"
@@ -194,200 +249,301 @@ class InlineDeveloperParser(RichTextParser):
         "f": (255, 255, 255),  # White
     }
 
-    def __init__(self, operation_character: str = None) -> None:
+    _HEX_COLOR_PATTERN = re.compile(r"^[0-9A-Fa-f]{6}$")
+
+    def __init__(self, text: str, operation_character: str = None) -> None:
         if operation_character is None:
             operation_character = self.DEFAULT_OPERATION_CHARACTER
 
         self._operation_character = self._parse_operation_character(operation_character)
+        self._text = self._parse_text(text)
+        self._index = 0
+        self._styles_and_text: List[Union[TextStyle, str]] = []
+
+    @staticmethod
+    def _parse_text(text: str) -> str:
+        if not isinstance(text, str):
+            raise TypeError(f"Text to parse must be of type 'str', not '{type(text)}'.")
+        return text
 
     @staticmethod
     def _parse_operation_character(char: str) -> str:
         if not isinstance(char, str) or len(char) != 1:
-            raise ValueError(f"Operation character must be a single character string, not '{char}'.")
+            raise ValueError(
+                f"Operation character must be a single character string, not '{char}'."
+            )
         return char
 
-    @staticmethod
-    def _peek(text: str, index: int) -> str:
-        if index < len(text):
-            return text[index]
-        return ""
+    def parse(self) -> List[TextSpan]:
+        """
+        Parse the stored text and return a list of fully-resolved TextSpans.
 
-    def parse(self, text: str) -> List[TextSpan]:
-        # 1. ABSTRACT INTO [TextStyle, str, TextStyle, str, ...]
-        styles_and_text: List[Union[TextStyle, str]] = []
+        Each span carries the complete style state that was active when that
+        run of characters was encountered.  Adjacent spans with identical
+        styles are merged automatically to keep the output compact.
+        """
+        self._reset_state()
+        self._tokenise()
+        return self._resolve_tokens()
 
-        current_text = ""
+    def _reset_state(self) -> None:
+        self._index = 0
+        self._styles_and_text = []
 
-        in_rainbow = False
-
-        rainbow_index = 0
-        rainbow_index_colors = [
-            (255, 0, 0),    # Red
-            (255, 127, 0),  # Orange
-            (255, 255, 0),  # Yellow
-            (0, 255, 0),    # Green
-            (0, 255, 255),  # Cyan
-            (0, 0, 255),    # Blue
-            (127, 0, 255)   # Magenta
-        ]
-
-        i = 0
-        while i < len(text):
-            current_char = text[i]
+    def _tokenise(self) -> None:
+        """
+        Walk `_text` left-to-right and fill `_styles_and_text` with a flat
+        sequence of `TextStyle` objects (directives) and plain `str` chunks.
+        """
+        while self._index < len(self._text):
+            current_char = self._current_char()
 
             if current_char == self._operation_character:
-                next_char = self._peek(text, i + 1)
-
-                if next_char == self._operation_character:
-                    current_text += self._operation_character
-                    i += 2
-
-                elif next_char in self.COLOR_CODE_MAPPING:
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    color = self.COLOR_CODE_MAPPING[next_char]
-                    styles_and_text.append(TextStyle(color=color))
-                    i += 2
-
-                    in_rainbow = False
-
-                elif next_char == "r":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    styles_and_text.append(TextStyle(color=self.COLOR_CODE_MAPPING["f"], background_color=None, bold=None, italic=None, underline=None, strikethrough=None))
-                    i += 2
-
-                    in_rainbow = False
-
-                elif next_char == "B":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    color_code_char = self._peek(text, i + 2)
-
-                    if color_code_char in self.COLOR_CODE_MAPPING:
-                        background_color = self.COLOR_CODE_MAPPING[color_code_char]
-                        styles_and_text.append(TextStyle(background_color=background_color))
-                        i += 3
-                    else:
-                        i += 2
-
-                    in_rainbow = False
-
-                elif next_char == "x":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    if i + 7 < len(text):
-                        hex_color = text[i + 2:i + 8]
-
-                        if ColorTools.is_hex(hex_color):
-                            color = ColorTools.to_rgb(hex_color)
-                            styles_and_text.append(TextStyle(color=color))
-                            i += 8
-                        else:
-                            i += 2
-
-                    else:
-                        i += 2
-
-                    in_rainbow = False
-
-                elif next_char == "X":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    if i + 7 < len(text):
-                        hex_color = text[i + 2:i + 8]
-
-                        if ColorTools.is_hex(hex_color):
-                            background_color = ColorTools.to_rgb(hex_color)
-                            styles_and_text.append(TextStyle(background_color=background_color))
-                            i += 8
-                        else:
-                            i += 2
-                    else:
-                        i += 2
-
-                elif next_char == "l":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    styles_and_text.append(TextStyle(bold=True))
-                    i += 2
-
-                elif next_char == "o":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    styles_and_text.append(TextStyle(italic=True))
-                    i += 2
-
-                elif next_char == "n":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    styles_and_text.append(TextStyle(underline=True))
-                    i += 2
-
-                elif next_char == "m":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    styles_and_text.append(TextStyle(strikethrough=True))
-                    i += 2
-
-                elif next_char == "!":
-                    if current_text:
-                        styles_and_text.append(current_text)
-                        current_text = ""
-
-                    i += 2
-
-                    in_rainbow = True
-
-                else:
-                    current_text += current_char
-                    i += 1
-
+                self._consume_operation()
             else:
-                if in_rainbow:
-                    # Placeholder for rainbow color cycling logic
-                    styles_and_text.append(TextStyle(color=rainbow_index_colors[rainbow_index % len(rainbow_index_colors)]))
-                    rainbow_index += 1
-                    current_text += current_char
-                    styles_and_text.append(current_text)
-                    i += 1
-                    current_text = ""
-                else:
-                    current_text += current_char
-                    i += 1
+                self._consume_literal_char(current_char)
 
-        if current_text:
-            styles_and_text.append(current_text)
+    def _consume_literal_char(self, ch: str) -> None:
+        """Append a single non-operation character to the token stream."""
+        self._styles_and_text.append(ch)
+        self._index += 1
 
-        # 2. COLLAPSE INTO TextSpan
-        spans: List[TextSpan] = []
+    def _consume_operation(self) -> None:
+        """
+        The current character is the operation character.  Decide which
+        escape sequence follows and delegate accordingly.
+        """
+        # Peek at what comes after the operation character.
+        next_char = self._peek(offset=1)
 
+        if next_char is None:
+            # Trailing operation character with nothing after it – treat as literal.
+            self._consume_literal_char(self._operation_character)
+            return
+
+        if next_char == self._operation_character:
+            self._styles_and_text.append(self._operation_character)
+            self._index += 2
+            return
+
+        # &B → background modifier (followed by either '#' or a palette code).
+        if next_char == "B":
+            self._consume_background_operation()
+            return
+
+        # &# → 24-bit foreground hex colour.
+        if next_char == "#":
+            self._consume_hex_color_operation(is_background=False)
+            return
+
+        # &<palette-code> → foreground colour or text-decoration toggle.
+        self._consume_palette_or_decoration_operation(next_char)
+
+    def _consume_background_operation(self) -> None:
+        """
+        Parse `&B<code>` or `&B#<rrggbb>` and emit a background TextStyle.
+
+        If the token is malformed the whole sequence is treated as literal text
+        so the end user sees exactly what was typed rather than silent corruption.
+        """
+        # After &B we expect either '#' (hex) or a palette character.
+        char_after_b_code = self._peek(offset=2)
+
+        if char_after_b_code is None:
+            # &B with nothing after it – treat &B as literal.
+            self._consume_literal_char(self._operation_character)
+            return
+
+        if char_after_b_code == "#":
+            self._consume_hex_color_operation(is_background=True)
+            return
+
+        # Otherwise expect a single palette code character.
+        color = self.COLOR_CODE_MAPPING.get(char_after_b_code)
+        if color is None:
+            # Unrecognised code – emit the three characters literally.
+            for i in range(3):
+                char = self._peek(offset=i)
+                if char is not None:
+                    self._styles_and_text.append(char)
+
+            self._index += 3
+            return
+
+        self._styles_and_text.append(TextStyle(background_color=color))
+        self._index += 3  # consume op + 'B' + code
+
+    def _consume_hex_color_operation(self, is_background: bool) -> None:
+        """
+        Parse `&#<rrggbb>` (foreground) or `&B#<rrggbb>` (background).
+
+        `is_background` controls whether the B modifier is present.
+        The offset to the '#' character differs accordingly:
+          - foreground: op '#' hex×6   → total width 8, '#' at offset 1
+          - background: op 'B' '#' hex×6 → total width 9, '#' at offset 2
+        """
+        hash_offset = 2 if is_background else 1
+        hex_start = hash_offset + 1  # first hex digit
+        total_width = hex_start + 6  # chars consumed in total
+
+        hex_str = self._peek_slice(offset=hex_start, length=6)
+
+        if hex_str is None or not self._HEX_COLOR_PATTERN.match(hex_str):
+            # Malformed – emit everything up to where we stopped as literals.
+            for i in range(min(total_width, len(self._text) - self._index)):
+                char = self._peek(offset=i)
+                if char is not None:
+                    self._styles_and_text.append(char)
+
+            self._index += min(total_width, len(self._text) - self._index)
+            return
+
+        color = ColorTools.to_rgb(hex_str)
+        style = (
+            TextStyle(background_color=color) if is_background else TextStyle(color=color)
+        )
+        self._styles_and_text.append(style)
+        self._index += total_width
+
+    def _consume_palette_or_decoration_operation(self, code: str) -> None:
+        """
+        Parse `&<code>` where `code` is a single palette or decoration character.
+
+        Unknown codes are emitted as literal text (the op char + code char).
+        """
+        style = self._build_style_for_code(code)
+
+        if style is None:
+            # Unrecognised code – pass both characters through literally.
+            self._styles_and_text.append(self._operation_character)
+            self._styles_and_text.append(code)
+            self._index += 2
+            return
+
+        self._styles_and_text.append(style)
+        self._index += 2  # consume op + code
+
+    def _build_style_for_code(self, code: str) -> Optional[TextStyle]:
+        """
+        Return the TextStyle that corresponds to a single-character code, or
+        None when the code is not part of the known vocabulary.
+        """
+        # Palette colour codes.
+        color = self.COLOR_CODE_MAPPING.get(code)
+        if color is not None:
+            return TextStyle(color=color)
+
+        # Decoration and control codes.
+        decoration_map: Dict[str, TextStyle] = {
+            "l": TextStyle(bold=True),
+            "o": TextStyle(italic=True),
+            "n": TextStyle(underline=True),
+            "m": TextStyle(strikethrough=True),
+            "r": TextStyle(color=DEFAULT_COLOR_FLAG, background_color=DEFAULT_COLOR_FLAG, bold=False, italic=False,
+                           underline=False, strikethrough=False),
+        }
+        return decoration_map.get(code)
+
+    def _current_char(self) -> str:
+        return self._text[self._index]
+
+    def _peek(self, offset: int) -> Optional[str]:
+        """Return the character at `_index + offset`, or None if out of range."""
+        pos = self._index + offset
+        return self._text[pos] if pos < len(self._text) else None
+
+    def _peek_slice(self, offset: int, length: int) -> Optional[str]:
+        """
+        Return a slice of `length` characters starting at `_index + offset`,
+        or None if the slice would extend past the end of the string.
+        """
+        start = self._index + offset
+        end = start + length
+        if end > len(self._text):
+            return None
+        return self._text[start:end]
+
+    def _resolve_tokens(self) -> List[TextSpan]:
+        """
+        Walk the flat token list produced by _tokenise and return a list of
+        TextSpans with fully resolved styles.
+
+        Adjacent character tokens that share an identical resolved style are merged
+        into a single span to keep the output compact.
+        """
         current_style = TextStyle()
+        spans: List[TextSpan] = []
+        pending_chars: List[str] = []
 
-        for item in styles_and_text:
-            if isinstance(item, TextStyle):
-                current_style = current_style.merge(item)
+        for token in self._styles_and_text:
+            if isinstance(token, TextStyle):
+                self._flush_pending_chars(pending_chars, current_style, spans)
+                current_style = self._apply_directive(current_style, token)
             else:
-                spans.append(TextSpan(text=item, style=current_style))
+                pending_chars.append(token)
 
+        self._flush_pending_chars(pending_chars, current_style, spans)
         return spans
 
+    def _apply_directive(self, current_style: TextStyle, directive: TextStyle) -> TextStyle:
+        """
+        Return a new TextStyle that represents `current_style` with `directive`
+        merged in.
 
+        Color fields: None = no change, DEFAULT_COLOR_FLAG = clear, RGB = set.
+        Bool fields:   None = no change, bool = set.
+        """
+        return TextStyle(
+            color=directive.color if directive.color is not None else current_style.color,
+            background_color=directive.background_color if directive.background_color is not None else current_style.background_color,
+            bold=directive.bold if directive.bold is not None else current_style.bold,
+            italic=directive.italic if directive.italic is not None else current_style.italic,
+            underline=directive.underline if directive.underline is not None else current_style.underline,
+            strikethrough=directive.strikethrough if directive.strikethrough is not None else current_style.strikethrough,
+        )
+
+    @staticmethod
+    def _flush_pending_chars(
+            pending: List[str],
+            current_style: TextStyle,
+            spans: List[TextSpan],
+    ) -> None:
+        """
+        Drain `pending` into a new TextSpan, merging with the previous span when
+        the resolved style is identical. Clears `pending` in place.
+        """
+        if not pending:
+            return
+
+        text = "".join(pending)
+        pending.clear()
+
+        if spans and spans[-1].style == current_style:
+            spans[-1] = TextSpan(text=spans[-1].text + text, style=current_style)
+        else:
+            spans.append(TextSpan(text=text, style=current_style))
+
+
+def main() -> None:
+    if __name__ == "__main__":
+        examples = [
+            "&cHello &6world&r!",
+            "&#FF0000Red &B#00FF00green-bg&r normal",
+            "&lBold &o&lBold-Italic &r back to normal",
+            "&B4Dark-red background &r cleared",
+            "&&amp escaped && double",
+            "&nUnder&mStrike&r plain",
+            "&zUnknown code left as-is",
+            "No markup at all.",
+        ]
+
+        for src in examples:
+            parser = InlineDeveloperParser(src)
+            spans = parser.parse()
+            print(f"\nInput : {src!r}")
+            for span in spans:
+                print(f"  {span}")
+
+
+if __name__ == '__main__':
+    main()
