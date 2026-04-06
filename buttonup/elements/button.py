@@ -2,7 +2,7 @@ from typing import SupportsInt, Union, Optional, Tuple, Dict
 
 import pygame
 
-import constants
+from .. import constants
 from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
     apply_surface_border_radius, Colors
 from .label import Label
