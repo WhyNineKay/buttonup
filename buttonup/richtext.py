@@ -117,7 +117,7 @@ class RichText(FontElement):
         for span in spans:
             if not isinstance(span, TextSpan):
                 raise TypeError(f"All items in spans must be of type 'TextSpan', not '{type(span)}'.")
-        return spans
+        return spans.copy()
 
     def _parse_text_color(self, color: ColorLike) -> RGB:
         if ColorTools.is_color(color):
