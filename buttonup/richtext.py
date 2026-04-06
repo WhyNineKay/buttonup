@@ -91,7 +91,7 @@ class RenderFormText:
 
 
 class RichText(FontElement):
-    def __init__(self, spans: list[TextSpan], font: FontLike = None, font_size: SupportsInt = None,
+    def __init__(self, spans: List[TextSpan], font: FontLike = None, font_size: SupportsInt = None,
                  default_text_color: ColorLike = None) -> None:
         if font is None:
             font = constants.DEFAULT_FONT_NAME
@@ -111,7 +111,7 @@ class RichText(FontElement):
         self._rendered_forms: List[RenderFormText] = []
         self.render()
 
-    def _parse_spans(self, spans: list[TextSpan]) -> list[TextSpan]:
+    def _parse_spans(self, spans: List[TextSpan]) -> List[TextSpan]:
         if not isinstance(spans, list):
             raise TypeError(f"Spans must be of type 'list', not '{type(spans)}'.")
         for span in spans:
