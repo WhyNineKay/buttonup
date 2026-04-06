@@ -106,10 +106,18 @@ class RichText(FontElement):
 
         self._default_text_color = self._parse_text_color(default_text_color)
 
-        self._spans = spans
+        self._spans = self._parse_spans(spans)
 
         self._rendered_forms: List[RenderFormText] = []
         self.render()
+
+    def _parse_spans(self, spans: list[TextSpan]) -> list[TextSpan]:
+        if not isinstance(spans, list):
+            raise TypeError(f"Spans must be of type 'list', not '{type(spans)}'.")
+        for span in spans:
+            if not isinstance(span, TextSpan):
+                raise TypeError(f"All items in spans must be of type 'TextSpan', not '{type(span)}'.")
+        return spans
 
     def _parse_text_color(self, color: ColorLike) -> RGB:
         if ColorTools.is_color(color):
