@@ -158,7 +158,7 @@ class RichText(FontElement):
             )
 
             if span.style.get_strikethrough():
-                self._apply_strikethrough(text_surface, self._default_text_color)
+                self._apply_strikethrough(text_surface, foreground_color)
 
             rendered_forms.append(RenderFormText(
                 span=span,
