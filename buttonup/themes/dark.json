@@ -1,0 +1,30 @@
+{
+  "name": "Dark",
+  "colors": {
+    "background": "#1E1F22",
+    "surface": "#25282B",
+    "primary": "#3A3F45",
+    "secondary": "#32363A",
+    "text_surface": "#E2E2E2",
+    "text_background": "#FFFFFF"
+  },
+  "elements": {
+    "label": {
+      "text_color": "#FFFFFF"
+    },
+    "button": {
+      "base_color": "#2A2D30",
+      "base_color_pressed": "#24272A",
+      "base_color_hovered": "#32363A",
+      "base_color_disabled": "#24272A",
+      "border_color": "#3B4044",
+      "border_color_pressed": "#313437",
+      "border_color_hovered": "#454A4E",
+      "border_color_disabled": "#3B4044",
+      "text_color": "#E2E2E2",
+      "text_color_pressed": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E"
+    }
+  }
+}
