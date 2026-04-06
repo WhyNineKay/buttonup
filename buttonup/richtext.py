@@ -56,7 +56,6 @@ class TextStyle:
         )
 
     def __repr__(self) -> str:
-        # Print values only if not None
         fields = []
         if self.color is not None:
             fields.append(f"color={self.color}")
@@ -150,9 +149,6 @@ class RichText(FontElement):
                 background_color = None
             else:
                 background_color = span.style.background_color
-
-            print(f"{background_color=}")
-            print(f"{foreground_color=}")
 
             text_surface = self._font.render(
                 span.text,
@@ -522,28 +518,3 @@ class InlineDeveloperParser(RichTextParser):
             spans[-1] = TextSpan(text=spans[-1].text + text, style=current_style)
         else:
             spans.append(TextSpan(text=text, style=current_style))
-
-
-def main() -> None:
-    if __name__ == "__main__":
-        examples = [
-            "&cHello &6world&r!",
-            "&#FF0000Red &B#00FF00green-bg&r normal",
-            "&lBold &o&lBold-Italic &r back to normal",
-            "&B4Dark-red background &r cleared",
-            "&&amp escaped && double",
-            "&nUnder&mStrike&r plain",
-            "&zUnknown code left as-is",
-            "No markup at all.",
-        ]
-
-        for src in examples:
-            parser = InlineDeveloperParser(src)
-            spans = parser.parse()
-            print(f"\nInput : {src!r}")
-            for span in spans:
-                print(f"  {span}")
-
-
-if __name__ == '__main__':
-    main()
