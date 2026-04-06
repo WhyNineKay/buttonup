@@ -3,8 +3,12 @@ import pygame
 import buttonup
 from buttonup.richtext import TextSpan, RichText, TextStyle, InlineDeveloperParser
 
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+pygame.init()
+
+DISPLAY_INFO = pygame.display.Info()
+
+WINDOW_WIDTH = min(DISPLAY_INFO.current_w, 1920)
+WINDOW_HEIGHT = min(DISPLAY_INFO.current_h, 1080)
 WINDOW_FPS = 60
 
 pygame.font.init()
