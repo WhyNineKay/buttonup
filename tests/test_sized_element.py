@@ -31,7 +31,7 @@ class TestSizedElement(unittest.TestCase):
                     el = SizedElement(x, y, width, height)
                     self.assertEqual(el.width, expected[0])
                     self.assertEqual(el.height, expected[1])
-                    self.assertEqual(el.size, expected)
+                    self.assertEqual(el.dimensions, expected)
                     self.assertEqual(el.rect.size, expected)
 
     def test_set_x_updates_rect_and_pos(self):

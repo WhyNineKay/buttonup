@@ -21,7 +21,7 @@ class TestResizableElement(unittest.TestCase):
                 self.assertEqual(el.pos, (int(x), int(y)))
                 self.assertEqual(el.width, expected[0])
                 self.assertEqual(el.height, expected[1])
-                self.assertEqual(el.size, expected)
+                self.assertEqual(el.dimensions, expected)
                 self.assertEqual(el.rect.size, expected)
 
     def test_width_setter_updates_size_and_validates(self):
@@ -41,7 +41,7 @@ class TestResizableElement(unittest.TestCase):
                 else:
                     el.width = value  # type: ignore
                     self.assertEqual(el.width, expected[0])
-                    self.assertEqual(el.size, expected)
+                    self.assertEqual(el.dimensions, expected)
                     self.assertEqual(el.rect.size, expected)
 
     def test_height_setter_updates_size_and_validates(self):
@@ -61,7 +61,7 @@ class TestResizableElement(unittest.TestCase):
                 else:
                     el.height = value  # type: ignore
                     self.assertEqual(el.height, expected[1])
-                    self.assertEqual(el.size, expected)
+                    self.assertEqual(el.dimensions, expected)
                     self.assertEqual(el.rect.size, expected)
 
     def test_size_setter_accepts_tuple_and_rejects_invalid(self):
@@ -78,10 +78,10 @@ class TestResizableElement(unittest.TestCase):
                 el = ResizableElement(0, 0, 3, 4)
                 if isinstance(expected, WillRaise):
                     with self.assertRaises(expected.exception_type):
-                        el.size = value  # type: ignore
+                        el.dimensions = value  # type: ignore
                 else:
-                    el.size = value  # type: ignore
-                    self.assertEqual(el.size, expected)
+                    el.dimensions = value  # type: ignore
+                    self.assertEqual(el.dimensions, expected)
                     self.assertEqual(el.rect.size, expected)
 
     def test_center_setter_moves_element_and_validates(self):

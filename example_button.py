@@ -34,7 +34,7 @@ class MainWindow:
         sprite_sheet = {
             buttonup.InteractionState.INACTIVE: pygame.image.load("example_assets/main_menu_base.png").convert_alpha(),
             buttonup.InteractionState.HOVERED: pygame.image.load("example_assets/main_menu_hovered.png").convert_alpha(),
-            buttonup.InteractionState.CLICKED: pygame.image.load("example_assets/main_menu_clicked.png").convert_alpha(),
+            buttonup.InteractionState.PRESSED: pygame.image.load("example_assets/main_menu_clicked.png").convert_alpha(),
             buttonup.InteractionState.DISABLED: pygame.image.load("example_assets/main_menu_disabled.png").convert_alpha(),
         }
 

@@ -8,6 +8,7 @@ Must be able to load from:
  - Theme dict
 
 """
+import copy
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,6 +25,9 @@ DEFAULT_THEME_NAME = "dark"
 class LabelTheme:
     text_color: RGB
 
+    def copy(self) -> "LabelTheme":
+        return copy.copy(self)
+
 @dataclass
 class ButtonTheme:
     base_color: RGB
@@ -39,6 +43,9 @@ class ButtonTheme:
     text_color_hovered: RGB
     text_color_disabled: RGB
 
+    def copy(self) -> "ButtonTheme":
+        return copy.copy(self)
+
 @dataclass
 class ColorTheme:
     background: RGB
@@ -48,6 +55,35 @@ class ColorTheme:
     text_surface: RGB
     text_background: RGB
 
+    def copy(self) -> "ColorTheme":
+        return copy.copy(self)
+
+
+@dataclass
+class CheckboxTheme:
+    base_color: RGB
+    base_color_pressed: RGB
+    base_color_hovered: RGB
+    base_color_disabled: RGB
+    base_color_checked: RGB
+    border_color: RGB
+    border_color_pressed: RGB
+    border_color_hovered: RGB
+    border_color_disabled: RGB
+    border_color_checked: RGB
+    text_color: RGB
+    text_color_pressed: RGB
+    text_color_hovered: RGB
+    text_color_disabled: RGB
+    text_color_checked: RGB
+    check_color: RGB
+    check_color_pressed: RGB
+    check_color_hovered: RGB
+    check_color_disabled: RGB
+    check_color_checked: RGB
+
+    def copy(self) -> "CheckboxTheme":
+        return copy.copy(self)
 
 class Theme:
     def __init__(self, theme_dict: Dict) -> None:
@@ -56,6 +92,34 @@ class Theme:
         self._label_theme = self._parse_label_dict(theme_dict)
         self._button_theme = self._parse_button_dict(theme_dict)
         self._color_theme = self._parse_color_dict(theme_dict)
+        self._checkbox_theme = self._parse_checkbox_dict(theme_dict)
+
+    def _parse_checkbox_dict(self, theme_dict: Dict) -> CheckboxTheme:
+        element_name = "checkbox"
+        element_dict = self._get_element_dict(theme_dict, element_name)
+
+        return CheckboxTheme(
+            base_color=self._parse_element_color(element_dict, element_name, "base_color"),
+            base_color_pressed=self._parse_element_color(element_dict, element_name, "base_color_pressed"),
+            base_color_hovered=self._parse_element_color(element_dict, element_name, "base_color_hovered"),
+            base_color_disabled=self._parse_element_color(element_dict, element_name, "base_color_disabled"),
+            base_color_checked=self._parse_element_color(element_dict, element_name, "base_color_checked"),
+            border_color=self._parse_element_color(element_dict, element_name, "border_color"),
+            border_color_pressed=self._parse_element_color(element_dict, element_name, "border_color_pressed"),
+            border_color_hovered=self._parse_element_color(element_dict, element_name, "border_color_hovered"),
+            border_color_disabled=self._parse_element_color(element_dict, element_name, "border_color_disabled"),
+            border_color_checked=self._parse_element_color(element_dict, element_name, "border_color_checked"),
+            text_color=self._parse_element_color(element_dict, element_name, "text_color"),
+            text_color_pressed=self._parse_element_color(element_dict, element_name, "text_color_pressed"),
+            text_color_hovered=self._parse_element_color(element_dict, element_name, "text_color_hovered"),
+            text_color_disabled=self._parse_element_color(element_dict, element_name, "text_color_disabled"),
+            text_color_checked=self._parse_element_color(element_dict, element_name, "text_color_checked"),
+            check_color=self._parse_element_color(element_dict, element_name, "check_color"),
+            check_color_pressed=self._parse_element_color(element_dict, element_name, "check_color_pressed"),
+            check_color_hovered=self._parse_element_color(element_dict, element_name, "check_color_hovered"),
+            check_color_disabled=self._parse_element_color(element_dict, element_name, "check_color_disabled"),
+            check_color_checked=self._parse_element_color(element_dict, element_name, "check_color_checked")
+        )
 
     def _parse_color_dict(self, theme_dict: Dict) -> ColorTheme:
         color_dict = theme_dict.get("colors")
@@ -157,6 +221,10 @@ class Theme:
     @property
     def color(self) -> ColorTheme:
         return self._color_theme
+
+    @property
+    def checkbox_theme(self) -> CheckboxTheme:
+        return self._checkbox_theme
 
 
 ThemeLike = Theme | Dict | str | Path

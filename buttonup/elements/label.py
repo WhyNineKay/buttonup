@@ -60,7 +60,7 @@ class Label(SizedElement, ThemedElement, FontElement, Element):
 
     def _render_text_surface(self) -> None:
         self._text_surface = self._font.render(self._text, True, self._text_color)
-        self._update_size(
+        self._update_dimensions(
             width=self._text_surface.get_width(),
             height=self._text_surface.get_height()
         )

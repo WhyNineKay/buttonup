@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Tuple, SupportsInt
 class InteractionState(Enum):
     INACTIVE = auto()
     HOVERED = auto()
-    CLICKED = auto()
+    PRESSED = auto()
     DISABLED = auto()
 
 
@@ -133,7 +133,7 @@ class ColorTools:
 
 class ParsingTools:
     @staticmethod
-    def parse_positive_int(value: SupportsInt, parameter_name: str) -> int:
+    def parse_non_negative_int(value: SupportsInt, parameter_name: str) -> int:
         """
         Parse a value as a positive int.
 
@@ -177,6 +177,23 @@ class ParsingTools:
 
         return int(value)
 
+    @staticmethod
+    def parse_callback_or_callback_package(value: Any, parameter_name: str) -> CallbackPackage:
+        if callable(value):
+            return CallbackPackage(callback=value, args=(), kwargs={})
+        elif isinstance(value, CallbackPackage):
+            return value
+        else:
+            raise TypeError(
+                f"{parameter_name} must be a callable or CallbackPackage, not '{type(value)}'."
+            )
+
+    @staticmethod
+    def parse_bool_strict(value: Any, parameter_name: str) -> bool:
+        if isinstance(value, bool):
+            return value
+        else:
+            raise TypeError(f"{parameter_name} must be of type 'bool', not '{type(value)}'.")
 
 def draw_vertical_plane(surface: pygame.Surface, color: ColorLike, pos: Tuple[int, int], width: int = 1,
                         length: int = 10) -> None:

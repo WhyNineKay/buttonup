@@ -111,7 +111,7 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         elif self._state == InteractionState.HOVERED:
             self._base_color = self.theme.button_theme.base_color_hovered
             self._border_color = self.theme.button_theme.border_color_hovered
-        elif self._state == InteractionState.CLICKED:
+        elif self._state == InteractionState.PRESSED:
             self._base_color = self.theme.button_theme.base_color_pressed
             self._border_color = self.theme.button_theme.border_color_pressed
         elif self._state == InteractionState.DISABLED:
@@ -353,8 +353,8 @@ class TextButton(BaseButton):
         super()._update_position(x, y)
         self._update_label_position()
 
-    def _update_size(self, width: SupportsInt, height: SupportsInt) -> None:
-        super()._update_size(width, height)
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        super()._update_dimensions(width, height)
         self._update_label_position()
 
     @property
@@ -397,7 +397,7 @@ class TextButton(BaseButton):
             self._button_label.text_color = self._text_color
         elif self._state == InteractionState.HOVERED:
             self._button_label.text_color = self._text_color_hovered
-        elif self._state == InteractionState.CLICKED:
+        elif self._state == InteractionState.PRESSED:
             self._button_label.text_color = self._text_color_pressed
         elif self._state == InteractionState.DISABLED:
             self._button_label.text_color = self._text_color_disabled
@@ -595,7 +595,7 @@ class ImageButton(BaseButton):
             surface.blit(self._image, image_rect)
         elif self._state == InteractionState.HOVERED:
             surface.blit(self._hovered_image, image_rect)
-        elif self._state == InteractionState.CLICKED:
+        elif self._state == InteractionState.PRESSED:
             surface.blit(self._pressed_image, image_rect)
         elif self._state == InteractionState.DISABLED:
             surface.blit(self._disabled_image, image_rect)
@@ -611,7 +611,7 @@ class ImageButton(BaseButton):
             self._pressed_image = self._generate_pressed_image()
             self._disabled_image = self._generate_disabled_image()
 
-    def _update_size(self, width: SupportsInt, height: SupportsInt) -> None:
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         if self._image_size_dominant:
             # If the image size is dominant, we update the button size to fit the image with padding.
             image_width = self._original_image.get_width()
@@ -619,7 +619,7 @@ class ImageButton(BaseButton):
             width = image_width + self._padding * 2
             height = image_height + self._padding * 2
 
-        super()._update_size(width, height)
+        super()._update_dimensions(width, height)
 
         if not self._image_size_dominant:
             # If the button size is dominant, we update the image size to fit the button with padding.
@@ -660,7 +660,7 @@ class ImageButton(BaseButton):
     @image.setter
     def image(self, value: pygame.Surface) -> None:
         self._original_image = self._parse_image(value)
-        self._update_size(self._width, self._height)
+        self._update_dimensions(self._width, self._height)
 
     @property
     def state_changing_images(self) -> bool:
@@ -678,7 +678,7 @@ class ImageButton(BaseButton):
     @image_size_dominant.setter
     def image_size_dominant(self, value: bool) -> None:
         self._image_size_dominant = self._parse_image_size_dominant(value)
-        self._update_size(self._width, self._height)
+        self._update_dimensions(self._width, self._height)
 
     @property
     def preserve_aspect_ratio(self) -> bool:
@@ -687,7 +687,7 @@ class ImageButton(BaseButton):
     @preserve_aspect_ratio.setter
     def preserve_aspect_ratio(self, value: bool) -> None:
         self._preserve_aspect_ratio = self._parse_preserve_aspect_ratio(value)
-        self._update_size(self._width, self._height)
+        self._update_dimensions(self._width, self._height)
 
     @property
     def padding(self) -> int:
@@ -696,7 +696,7 @@ class ImageButton(BaseButton):
     @padding.setter
     def padding(self, value: SupportsInt) -> None:
         self._padding = self._parse_padding(value)
-        self._update_size(self._width, self._height)
+        self._update_dimensions(self._width, self._height)
 
     @property
     def image_width(self) -> int:
@@ -730,7 +730,7 @@ class SpriteButton(BaseButton):
             sprite_sheet = {
                 InteractionState.INACTIVE: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.PINK, Colors.PURPLE)),
                 InteractionState.HOVERED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.BLUE, Colors.AQUA)),
-                InteractionState.CLICKED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.GREEN, Colors.LIME)),
+                InteractionState.PRESSED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.GREEN, Colors.LIME)),
                 InteractionState.DISABLED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.RED, Colors.ORANGE)),
             }
 
@@ -768,7 +768,7 @@ class SpriteButton(BaseButton):
                 new_height = int(self._width / self._original_image_aspect_ratio)
 
             if new_width != self._width or new_height != self._height:
-                self._update_size(new_width, new_height)  # Recursively reach equilibrium size
+                self._update_dimensions(new_width, new_height)  # Recursively reach equilibrium size
                 return
 
         for state in InteractionState:
@@ -801,8 +801,8 @@ class SpriteButton(BaseButton):
         surface.blit(image, image_rect)
 
 
-    def _update_size(self, width: SupportsInt, height: SupportsInt) -> None:
-        super()._update_size(width, height)
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        super()._update_dimensions(width, height)
         self._resize_sprite_sheet()
 
 

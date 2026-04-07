@@ -103,9 +103,9 @@ class SizedElement(PositionalElement):
 
         self._width = 0
         self._height = 0
-        self._update_size(width, height)
+        self._update_dimensions(width, height)
 
-    def _update_size(self, width: SupportsInt, height: SupportsInt) -> None:
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         if not hasattr(width, "__int__"):
             raise TypeError(f"Value 'width' must be of type int, or support __int__ conversion.")
         if not hasattr(height, "__int__"):
@@ -135,7 +135,7 @@ class SizedElement(PositionalElement):
         return self._height
 
     @property
-    def size(self) -> Tuple[int, int]:
+    def dimensions(self) -> Tuple[int, int]:
         return self._width, self._height
 
     @property
@@ -195,7 +195,7 @@ class ResizableElement(SizedElement):
 
     @width.setter
     def width(self, value: SupportsInt) -> None:
-        self._update_size(value, self._height)
+        self._update_dimensions(value, self._height)
 
     @property
     def height(self) -> int:
@@ -203,18 +203,18 @@ class ResizableElement(SizedElement):
 
     @height.setter
     def height(self, value: SupportsInt) -> None:
-        self._update_size(self._width, value)
+        self._update_dimensions(self._width, value)
 
     @property
-    def size(self) -> Tuple[int, int]:
+    def dimensions(self) -> Tuple[int, int]:
         return self._width, self._height
 
-    @size.setter
-    def size(self, value: Tuple[SupportsInt, SupportsInt]) -> None:
+    @dimensions.setter
+    def dimensions(self, value: Tuple[SupportsInt, SupportsInt]) -> None:
         if not isinstance(value, tuple) or len(value) != 2:
-            raise TypeError(f"Value 'size' must be a tuple of length 2.")
+            raise TypeError(f"Value 'dimensions' must be a tuple of length 2.")
 
-        self._update_size(value[0], value[1])
+        self._update_dimensions(value[0], value[1])
 
 
 class InteractiveElement(SizedElement, Element):
@@ -287,7 +287,7 @@ class InteractiveElement(SizedElement, Element):
         # Mouse button just pressed
         if current_pressed and not self._previous_pressed:
             if is_mouse_over:
-                self._state = InteractionState.CLICKED
+                self._state = InteractionState.PRESSED
 
         # Mouse button just released
         if not current_pressed and self._previous_pressed:

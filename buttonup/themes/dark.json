@@ -2,9 +2,9 @@
   "name": "Dark",
   "colors": {
     "background": "#1E1F22",
-    "surface": "#25282B",
-    "primary": "#3A3F45",
-    "secondary": "#32363A",
+    "surface": "#3A3F45",
+    "primary": "#ECA72C",
+    "secondary": "#EE5622",
     "text_surface": "#E2E2E2",
     "text_background": "#FFFFFF"
   },
@@ -25,6 +25,28 @@
       "text_color_pressed": "#D6D6D6",
       "text_color_hovered": "#F0F0F0",
       "text_color_disabled": "#8E8E8E"
+    },
+    "checkbox": {
+      "base_color": "#2A2D30",
+      "base_color_pressed": "#24272A",
+      "base_color_hovered": "#32363A",
+      "base_color_disabled": "#24272A",
+      "base_color_checked": "#3A3F45",
+      "border_color": "#3B4044",
+      "border_color_pressed": "#EE5622",
+      "border_color_hovered": "#EE5622",
+      "border_color_disabled": "#34383B",
+      "border_color_checked": "#ECA72C",
+      "text_color": "#E2E2E2",
+      "text_color_pressed": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E",
+      "text_color_checked": "#F0F0F0",
+      "check_color": "#FFFFFF",
+      "check_color_pressed": "#BDBDBD",
+      "check_color_hovered": "#FFFFFF",
+      "check_color_disabled": "#7A7A7A",
+      "check_color_checked": "#FFFFFF"
     }
   }
 }
