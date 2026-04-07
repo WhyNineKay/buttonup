@@ -4,7 +4,7 @@ from .buttonup_types import RGB, ColorLike
 
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, SupportsInt
 
 
 class InteractionState(Enum):
@@ -130,6 +130,30 @@ class ColorTools:
 
         return (255, 255, 255) if luminance < 128 else (0, 0, 0)
 
+
+class ParsingTools:
+    @staticmethod
+    def parse_positive_int(value: SupportsInt, parameter_name: str) -> int:
+        if not hasattr(value, "__int__"):
+            raise TypeError(
+                f"{parameter_name} must be of type 'int' or support __int__ conversion, not '{type(value)}'."
+            )
+
+        int_value = int(value)
+
+        if int_value < 0:
+            raise ValueError(f"{parameter_name} must be non-negative, not '{int_value}'.")
+
+        return int_value
+
+    @staticmethod
+    def parse_int(value: SupportsInt, parameter_name: str) -> int:
+        if not hasattr(value, "__int__"):
+            raise TypeError(
+                f"{parameter_name} must be of type 'int' or support __int__ conversion, not '{type(value)}'."
+            )
+
+        return int(value)
 
 
 def draw_vertical_plane(surface: pygame.Surface, color: ColorLike, pos: Tuple[int, int], width: int = 1,
