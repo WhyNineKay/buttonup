@@ -134,6 +134,17 @@ class ColorTools:
 class ParsingTools:
     @staticmethod
     def parse_positive_int(value: SupportsInt, parameter_name: str) -> int:
+        """
+        Parse a value as a positive int.
+
+        Supports any value with __int__.
+
+        :param value: The value to parse.
+        :param parameter_name: The name of the parameter being parsed, used for error messages.
+        :return: The parsed positive int.
+        :raises TypeError: If the value does not support __int__ conversion.
+        :raises ValueError: If the parsed int is negative.
+        """
         if not hasattr(value, "__int__"):
             raise TypeError(
                 f"{parameter_name} must be of type 'int' or support __int__ conversion, not '{type(value)}'."
@@ -148,6 +159,17 @@ class ParsingTools:
 
     @staticmethod
     def parse_int(value: SupportsInt, parameter_name: str) -> int:
+        """
+        Parse a value as an int.
+
+        Supports any value with __int__.
+
+        :param value: The value to parse.
+        :param parameter_name: The name of the parameter being parsed, used for error messages.
+        :return: The parsed int.
+        :raises TypeError: If the value does not support __int__ conversion.
+        """
+
         if not hasattr(value, "__int__"):
             raise TypeError(
                 f"{parameter_name} must be of type 'int' or support __int__ conversion, not '{type(value)}'."
