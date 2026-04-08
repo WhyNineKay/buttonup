@@ -105,25 +105,29 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)
 
-        if self._state == InteractionState.INACTIVE:
-            self._base_color = self.theme.button_theme.base_color
-            self._border_color = self.theme.button_theme.border_color
-        elif self._state == InteractionState.HOVERED:
-            self._base_color = self.theme.button_theme.base_color_hovered
-            self._border_color = self.theme.button_theme.border_color_hovered
-        elif self._state == InteractionState.PRESSED:
-            self._base_color = self.theme.button_theme.base_color_pressed
-            self._border_color = self.theme.button_theme.border_color_pressed
-        elif self._state == InteractionState.DISABLED:
-            self._base_color = self.theme.button_theme.base_color_disabled
-            self._border_color = self.theme.button_theme.border_color_disabled
 
     def draw(self, surface: pygame.Surface) -> None:
+        if self._state == InteractionState.INACTIVE:
+            state_base_color = self._base_color
+            state_border_color = self._border_color
+        elif self._state == InteractionState.HOVERED:
+            state_base_color = self._base_color_hovered
+            state_border_color = self._border_color_hovered
+        elif self._state == InteractionState.PRESSED:
+            state_base_color = self._base_color_pressed
+            state_border_color = self._border_color_pressed
+        elif self._state == InteractionState.DISABLED:
+            state_base_color = self._base_color_disabled
+            state_border_color = self._border_color_disabled
+        else:
+            state_base_color = self._base_color
+            state_border_color = self._border_color
+
         # Draw base
-        pygame.draw.rect(surface, self._base_color, self.rect, border_radius=self._border_radius)
+        pygame.draw.rect(surface, state_base_color, self.rect, border_radius=self._border_radius)
 
         # Draw border
-        pygame.draw.rect(surface, self._border_color, self.rect, width=self._border_width,
+        pygame.draw.rect(surface, state_border_color, self.rect, width=self._border_width,
                          border_radius=self._border_radius)
 
     def _update_border_radius(self, border_radius: int) -> None:
