@@ -2,12 +2,12 @@
 element.py
 """
 from pathlib import Path
-from typing import SupportsInt, Tuple, Union, Optional
+from typing import SupportsInt, Tuple, Union, Optional, List
 import pygame
 
 from ..theme import Theme, ThemeLike, load_theme
 from ..buttonup_types import Callback, FontLike
-from ..utils import CallbackPackage, InteractionState
+from ..utils import CallbackPackage, InteractionState, ParsingTools
 
 
 class Element:
@@ -24,6 +24,7 @@ class Element:
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         pass
+
 
 class PositionalElement:
     """
@@ -183,6 +184,7 @@ class SizedElement(PositionalElement):
 
         y = int(value) - self._height // 2
         self._update_position(self._x, y)
+
 
 class ResizableElement(SizedElement):
     """
@@ -386,4 +388,108 @@ class ThemedElement:
         self._update_colors()
 
 
+class ContainerElement(Element, ResizableElement):
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 elements: List[SizedElement] = None,
+                 enforce_layout_cleanliness: bool = None
+                 ) -> None:
+        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
 
+        if elements is None:
+            elements = []
+
+        self._elements = self._parse_elements(elements)
+
+        if enforce_layout_cleanliness is None:
+            self._enforce_layout_cleanliness = True
+        else:
+            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(enforce_layout_cleanliness, "enforce_layout_cleanliness")
+        self._layout_dirty = True
+
+    def _apply_if_dirty(self) -> None:
+        if self._layout_dirty:
+            self.apply()
+
+
+    def _parse_elements(self, elements: List[SizedElement]) -> List[SizedElement]:
+        if not isinstance(elements, list):
+            raise TypeError(f"Elements must be a list of SizedElement objects, not '{type(elements)}'.")
+
+        for element in elements:
+            if not isinstance(element, SizedElement):
+                raise TypeError(f"All elements must be of type SizedElement, not '{type(element)}'.")
+
+        return elements
+
+    def add(self, element: SizedElement) -> None:
+        if not isinstance(element, SizedElement):
+            raise TypeError(f"Element must be of type SizedElement, not '{type(element)}'.")
+
+        self._elements.append(element)
+        self._layout_dirty = True
+
+    def remove(self, element: SizedElement) -> None:
+        if element in self._elements:
+            self._elements.remove(element)
+        else:
+            raise ValueError("Element not found in container.")
+
+        self._layout_dirty = True
+
+    def clear(self) -> None:
+        self._elements.clear()
+        self._layout_dirty = True
+
+    def apply(self) -> None:
+        """Apply the containers arrangement functionality. MUST be implemented by subclasses."""
+        self._layout_dirty = False
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self._enforce_layout_cleanliness:
+            self._apply_if_dirty()
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.draw(surface)
+
+    def update(self, dt: float) -> None:
+        if self._enforce_layout_cleanliness:
+            self._apply_if_dirty()
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.update(dt)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if self._enforce_layout_cleanliness:
+            self._apply_if_dirty()
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.handle_event(event)
+
+    def debug_draw(self, surface: pygame.Surface) -> None:
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.debug_draw(surface)
+
+    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        ResizableElement._update_position(self, x, y)
+        self.apply()
+
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        ResizableElement._update_dimensions(self, width, height)
+        self.apply()
+
+    @property
+    def elements(self) -> List[SizedElement]:
+        return self._elements.copy()
+
+    @elements.setter
+    def elements(self, elements: List[SizedElement]) -> None:
+        self._elements = self._parse_elements(elements)
+        self._layout_dirty = True
