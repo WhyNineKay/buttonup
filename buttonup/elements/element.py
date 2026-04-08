@@ -397,22 +397,27 @@ class ContainerElement(Element, ResizableElement):
                  elements: List[SizedElement] = None,
                  enforce_layout_cleanliness: bool = None
                  ) -> None:
-        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
-
         if elements is None:
             elements = []
 
         self._elements = self._parse_elements(elements)
 
+        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
+
         if enforce_layout_cleanliness is None:
             self._enforce_layout_cleanliness = True
         else:
             self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(enforce_layout_cleanliness, "enforce_layout_cleanliness")
+
         self._layout_dirty = True
 
-    def _apply_if_dirty(self) -> None:
+    def _raise_or_apply_if_dirty(self) -> None:
         if self._layout_dirty:
-            self.apply()
+            if self._enforce_layout_cleanliness:
+                raise RuntimeError("Container layout is dirty: Elements are not synced to container. Please call the "
+                                   "'apply' method to update the layout before drawing, updating, or handling events.")
+            else:
+                self.apply()
 
 
     def _parse_elements(self, elements: List[SizedElement]) -> List[SizedElement]:
@@ -449,24 +454,21 @@ class ContainerElement(Element, ResizableElement):
         self._layout_dirty = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        if self._enforce_layout_cleanliness:
-            self._apply_if_dirty()
+        self._raise_or_apply_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):
                 element.draw(surface)
 
     def update(self, dt: float) -> None:
-        if self._enforce_layout_cleanliness:
-            self._apply_if_dirty()
+        self._raise_or_apply_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):
                 element.update(dt)
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        if self._enforce_layout_cleanliness:
-            self._apply_if_dirty()
+        self._raise_or_apply_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):
@@ -476,6 +478,8 @@ class ContainerElement(Element, ResizableElement):
         for element in self._elements:
             if isinstance(element, Element):
                 element.debug_draw(surface)
+
+        pygame.draw.rect(surface, (255, 0, 0), self._rect, 1)
 
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
         ResizableElement._update_position(self, x, y)
@@ -493,3 +497,10 @@ class ContainerElement(Element, ResizableElement):
     def elements(self, elements: List[SizedElement]) -> None:
         self._elements = self._parse_elements(elements)
         self._layout_dirty = True
+
+    def extend(self, elements: List[SizedElement]) -> None:
+        elements = self._parse_elements(elements)
+
+        self._elements.extend(elements)
+        self._layout_dirty = True
+
