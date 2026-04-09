@@ -47,6 +47,22 @@
       "check_color_hovered": "#FFFFFF",
       "check_color_disabled": "#7A7A7A",
       "check_color_checked": "#FFFFFF"
+    },
+    "text_input": {
+      "base_color": "#2A2D30",
+      "base_color_focused": "#32363A",
+      "base_color_hovered": "#32363A",
+      "base_color_disabled": "#24272A",
+      "border_color": "#3B4044",
+      "border_color_focused": "#EE5622",
+      "border_color_hovered": "#454A4E",
+      "border_color_disabled": "#34383B",
+      "text_color": "#E2E2E2",
+      "text_color_focused": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E",
+      "placeholder_color": "#7A7A7A",
+      "caret_color": "#FFFFFF"
     }
   }
 }

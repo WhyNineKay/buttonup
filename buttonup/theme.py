@@ -85,6 +85,28 @@ class CheckboxTheme:
     def copy(self) -> "CheckboxTheme":
         return copy.copy(self)
 
+
+@dataclass
+class TextInputTheme:
+    base_color: RGB
+    base_color_focused: RGB
+    base_color_hovered: RGB
+    base_color_disabled: RGB
+    border_color: RGB
+    border_color_focused: RGB
+    border_color_hovered: RGB
+    border_color_disabled: RGB
+    text_color: RGB
+    text_color_focused: RGB
+    text_color_hovered: RGB
+    text_color_disabled: RGB
+    placeholder_color: RGB
+    caret_color: RGB
+
+    def copy(self) -> "TextInputTheme":
+        return copy.copy(self)
+
+
 class Theme:
     def __init__(self, theme_dict: Dict) -> None:
         self._name = self._parse_name(theme_dict)
@@ -93,6 +115,28 @@ class Theme:
         self._button_theme = self._parse_button_dict(theme_dict)
         self._color_theme = self._parse_color_dict(theme_dict)
         self._checkbox_theme = self._parse_checkbox_dict(theme_dict)
+        self._text_input_theme = self._parse_text_input_dict(theme_dict)
+
+    def _parse_text_input_dict(self, theme_dict: Dict) -> TextInputTheme:
+        element_name = "text_input"
+        element_dict = self._get_element_dict(theme_dict, element_name)
+
+        return TextInputTheme(
+            base_color=self._parse_element_color(element_dict, element_name, "base_color"),
+            base_color_focused=self._parse_element_color(element_dict, element_name, "base_color_focused"),
+            base_color_hovered=self._parse_element_color(element_dict, element_name, "base_color_hovered"),
+            base_color_disabled=self._parse_element_color(element_dict, element_name, "base_color_disabled"),
+            border_color=self._parse_element_color(element_dict, element_name, "border_color"),
+            border_color_focused=self._parse_element_color(element_dict, element_name, "border_color_focused"),
+            border_color_hovered=self._parse_element_color(element_dict, element_name, "border_color_hovered"),
+            border_color_disabled=self._parse_element_color(element_dict, element_name, "border_color_disabled"),
+            text_color=self._parse_element_color(element_dict, element_name, "text_color"),
+            text_color_focused=self._parse_element_color(element_dict, element_name, "text_color_focused"),
+            text_color_hovered=self._parse_element_color(element_dict, element_name, "text_color_hovered"),
+            text_color_disabled=self._parse_element_color(element_dict, element_name, "text_color_disabled"),
+            placeholder_color=self._parse_element_color(element_dict, element_name, "placeholder_color"),
+            caret_color=self._parse_element_color(element_dict, element_name, "caret_color")
+        )
 
     def _parse_checkbox_dict(self, theme_dict: Dict) -> CheckboxTheme:
         element_name = "checkbox"
@@ -226,6 +270,9 @@ class Theme:
     def checkbox_theme(self) -> CheckboxTheme:
         return self._checkbox_theme
 
+    @property
+    def text_input_theme(self) -> TextInputTheme:
+        return self._text_input_theme
 
 ThemeLike = Theme | Dict | str | Path
 
