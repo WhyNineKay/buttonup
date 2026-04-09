@@ -78,6 +78,9 @@ class Checkbox(InteractiveElement, ThemedElement):
             theme=self.theme
         )
 
+        if on_toggle is None:
+            on_toggle = lambda _: None
+
         self._on_toggle: CallbackPackage = ParsingTools.parse_callback_or_callback_package(on_toggle, "on_toggle")
 
         if len(self._on_toggle.args) > 0:
