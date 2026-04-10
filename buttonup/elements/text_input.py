@@ -218,15 +218,19 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         if self._focused:
             base_color = self._base_color_focused
             border_color = self._border_color_focused
+            self._text_label.text_color = self._text_color_focused
         elif self._state in {InteractionState.HOVERED, InteractionState.PRESSED}:
             base_color = self._base_color_hovered
             border_color = self._border_color_hovered
+            self._text_label.text_color = self._text_color_hovered
         elif self._state == InteractionState.DISABLED:
             base_color = self._base_color_disabled
             border_color = self._border_color_disabled
+            self._text_label.text_color = self._text_color_disabled
         else:
             base_color = self._base_color
             border_color = self._border_color
+            self._text_label.text_color = self._text_color
 
         pygame.draw.rect(surface, base_color, self._rect, border_radius=self._border_radius)
 
