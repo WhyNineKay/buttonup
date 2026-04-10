@@ -197,7 +197,9 @@ class Checkbox(InteractiveElement, ThemedElement):
         self._checked = ParsingTools.parse_bool_strict(value, "checked")
 
     def _get_base_color(self) -> RGB:
-        if self._checked:
+        if self._state == InteractionState.DISABLED:
+            return self._checkbox_theme.base_color_disabled
+        elif self._checked:
             return self._checkbox_theme.base_color_checked
         elif self._state == InteractionState.PRESSED:
             return self._checkbox_theme.base_color_pressed
@@ -207,7 +209,9 @@ class Checkbox(InteractiveElement, ThemedElement):
             return self._checkbox_theme.base_color
 
     def _get_border_color(self) -> RGB:
-        if self._checked:
+        if self._state == InteractionState.DISABLED:
+            return self._checkbox_theme.border_color_disabled
+        elif self._checked:
             return self._checkbox_theme.border_color_checked
         elif self._state == InteractionState.PRESSED:
             return self._checkbox_theme.border_color_pressed
@@ -217,7 +221,9 @@ class Checkbox(InteractiveElement, ThemedElement):
             return self._checkbox_theme.border_color
 
     def _get_check_color(self) -> RGB:
-        if self._checked:
+        if self._state == InteractionState.DISABLED:
+            return self._checkbox_theme.check_color_disabled
+        elif self._checked:
             return self._checkbox_theme.check_color_checked
         elif self._state == InteractionState.PRESSED:
             return self._checkbox_theme.check_color_pressed
@@ -227,7 +233,21 @@ class Checkbox(InteractiveElement, ThemedElement):
             return self._checkbox_theme.check_color
 
     def _get_text_color(self) -> RGB:
-        if self._checked:
+        if self._state == InteractionState.DISABLED:
+            return self._checkbox_theme.text_color_disabled
+        elif self._checked:
+            return self._checkbox_theme.text_color_checked
+        elif self._state == InteractionState.PRESSED:
+            return self._checkbox_theme.text_color_pressed
+        elif self._state == InteractionState.HOVERED:
+            return self._checkbox_theme.text_color_hovered
+        else:
+            return self._checkbox_theme.text_color
+
+    def _get_text_color(self) -> RGB:
+        if self._state == InteractionState.DISABLED:
+            return self._checkbox_theme.text_color_disabled
+        elif self._checked:
             return self._checkbox_theme.text_color_checked
         elif self._state == InteractionState.PRESSED:
             return self._checkbox_theme.text_color_pressed
@@ -240,6 +260,7 @@ class Checkbox(InteractiveElement, ThemedElement):
         base_color = self._get_base_color()
         border_color = self._get_border_color()
         check_color = self._get_check_color()
+        text_color = self._get_text_color()
 
         pygame.draw.rect(surface, base_color, self._checkbox_rect, border_radius=self._border_radius)
         pygame.draw.rect(surface, border_color, self._checkbox_rect, width=self._border_width, border_radius=self._border_radius)
@@ -247,6 +268,7 @@ class Checkbox(InteractiveElement, ThemedElement):
         if self._checked:
             self._draw_check(surface, check_color)
 
+        self._checkbox_label.text_color = text_color
         self._checkbox_label.draw(surface)
 
     def _draw_check(self, surface: pygame.Surface, color: RGB) -> None:
