@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import SupportsInt, Dict, Tuple, List, Union, Optional, Literal
+from typing import SupportsInt, Dict, List, Union, Optional
 
 import pygame
 
@@ -147,7 +147,6 @@ class RichText(FontElement):
         for span in self._spans:
             self._set_font_parameters(span.style)
 
-
             if span.style.color == DEFAULT_COLOR_FLAG or span.style.color is None:
                 foreground_color = self._default_text_color
             else:
@@ -229,7 +228,8 @@ class InlineDeveloperParser(RichTextParser):
     - &B: Background color, followed by a single character code. For example, &B4 would set the background color to dark
     red.
     - &#: Followed by 6 hexadecimal digits, sets the text color to the specified RGB value. For example, &#FF0000
-    - &B#: Followed by 6 hexadecimal digits, sets the background color to the specified RGB value. For example, &B#00FF00.
+    - &B#: Followed by 6 hexadecimal digits, sets the background color to the specified RGB value. For example,
+    &B#00FF00.
     """
 
     DEFAULT_OPERATION_CHARACTER = "&"
@@ -469,7 +469,7 @@ class InlineDeveloperParser(RichTextParser):
 
     def _resolve_tokens(self) -> List[TextSpan]:
         """
-        Walk the flat token list produced by _tokenise and return a list of
+        Walk the flat token list produced by _tokenize and return a list of
         TextSpans with fully resolved styles.
 
         Adjacent character tokens that share an identical resolved style are merged
@@ -499,11 +499,17 @@ class InlineDeveloperParser(RichTextParser):
         """
         return TextStyle(
             color=directive.color if directive.color is not None else current_style.color,
-            background_color=directive.background_color if directive.background_color is not None else current_style.background_color,
+            background_color=(
+                directive.background_color if directive.background_color is not None else
+                current_style.background_color
+            ),
             bold=directive.bold if directive.bold is not None else current_style.bold,
             italic=directive.italic if directive.italic is not None else current_style.italic,
             underline=directive.underline if directive.underline is not None else current_style.underline,
-            strikethrough=directive.strikethrough if directive.strikethrough is not None else current_style.strikethrough,
+            strikethrough=(
+                directive.strikethrough if directive.strikethrough is not None else
+                current_style.strikethrough
+            ),
         )
 
     @staticmethod

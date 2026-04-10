@@ -1,11 +1,11 @@
-from typing import SupportsInt, Optional, Union
+from typing import SupportsInt, Optional
 
 import pygame
 
 from .element import SizedElement, ThemedElement, FontElement, Element
 from .. import constants
-from ..theme import ThemeLike, load_default_theme
 from ..buttonup_types import FontLike, RGB, ColorLike
+from ..theme import ThemeLike, load_default_theme
 from ..utils import ColorTools
 
 

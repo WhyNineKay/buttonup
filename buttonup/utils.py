@@ -1,10 +1,14 @@
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any, Callable, Dict, Tuple, SupportsInt
+
 import pygame
 
 from .buttonup_types import RGB, ColorLike
 
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Tuple, SupportsInt
+
+def dummy_function(*_args: Any, **_kwargs: Any) -> Any:
+    pass
 
 
 class InteractionState(Enum):
@@ -56,6 +60,7 @@ class Colors:
     AQUA = (0, 255, 255)
     LIME = (0, 255, 0)
     GREEN = (0, 128, 0)
+
 
 class ColorTools:
     @classmethod
@@ -110,11 +115,11 @@ class ColorTools:
     def to_rgb(cls, value: Any) -> RGB:
         if cls.is_hex(value):
             value = value.lstrip("#")
-            return tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))
+            return tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))  # type: ignore
         elif cls.is_rgb(value):
             return value
         elif cls.is_pygame_color(value):
-            return tuple(value[:3])
+            return tuple(value[:3])  # type: ignore
         else:
             raise TypeError(f"Value '{value}' is not a valid color format.")
 
@@ -195,6 +200,7 @@ class ParsingTools:
         else:
             raise TypeError(f"{parameter_name} must be of type 'bool', not '{type(value)}'.")
 
+
 def draw_vertical_plane(surface: pygame.Surface, color: ColorLike, pos: Tuple[int, int], width: int = 1,
                         length: int = 10) -> None:
     half_length = length // 2
@@ -217,8 +223,6 @@ def draw_horizontal_plane(surface: pygame.Surface, color: ColorLike, pos: Tuple[
 
 def generate_debug_image(size: Tuple[int, int], colors: Tuple[RGB, RGB]) -> pygame.Surface:
     surface = pygame.Surface((2, 2))
-
-
 
     surface.set_at((0, 0), colors[0])
     surface.set_at((1, 0), colors[1])

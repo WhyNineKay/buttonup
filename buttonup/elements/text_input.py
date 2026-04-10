@@ -2,12 +2,12 @@ from typing import SupportsInt, Callable, Union
 
 import pygame
 
+from .element import ResizableElement, ThemedElement, InteractiveElement
+from .label import Label
 from .. import constants
 from ..buttonup_types import FontLike, Callback, RGB
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR, InteractionState
-from .element import ResizableElement, ThemedElement, InteractiveElement
-from .label import Label
+from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function
 
 
 class TextInput(InteractiveElement, ResizableElement, ThemedElement):
@@ -63,7 +63,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         self._text_padding = self._parse_text_padding(text_padding)
 
         if allowed_char_filter is None:
-            allowed_char_filter = lambda c: True
+            allowed_char_filter = dummy_function
 
         self._allowed_char_filter = self._parse_allowed_char_filter(allowed_char_filter)
 
@@ -126,12 +126,16 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         self._text_label._update_colors()
         self._placeholder_label.text_color = self._placeholder_color
 
-    def _parse_on_change(self, on_change: Union[Callback, CallbackPackage, None]) -> Union[
-        Callback, CallbackPackage, None]:
+    def _parse_on_change(
+            self,
+            on_change: Union[Callback, CallbackPackage, None]
+    ) -> Union[Callback, CallbackPackage, None]:
         return self._parse_named_callback(on_change, "on_change")
 
-    def _parse_on_submit(self, on_submit: Union[Callback, CallbackPackage, None]) -> Union[
-        Callback, CallbackPackage, None]:
+    def _parse_on_submit(
+            self,
+            on_submit: Union[Callback, CallbackPackage, None]
+    ) -> Union[Callback, CallbackPackage, None]:
         return self._parse_named_callback(on_submit, "on_submit")
 
     def _parse_max_length(self, max_length: Union[SupportsInt, None]) -> Union[int, None]:
@@ -146,7 +150,9 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
     def _parse_allowed_char_filter(self, allowed_char_filter: Callable[[str], bool]) -> Callable[[str], bool]:
         if not callable(allowed_char_filter):
             raise TypeError(
-                f"TextInput allowed_char_filter must be a callable that takes a single string argument and returns a boolean, not '{type(allowed_char_filter)}'.")
+                f"TextInput allowed_char_filter must be a callable that takes a single string argument and returns a"
+                f"boolean, not '{type(allowed_char_filter)}'."
+            )
         return allowed_char_filter
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
@@ -249,7 +255,12 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
             # Draw a rect
             cursor_x = self._text_label.x + self._text_label.font.size(self._text_label.text[:self._cursor_pos])[0]
             cursor_y = self._text_label.y
-            pygame.draw.rect(surface, self._caret_color, (cursor_x, cursor_y, self._cursor_width, self._cursor_height), border_radius=self._cursor_width // 2)
+            pygame.draw.rect(
+                surface,
+                self._caret_color,
+                (cursor_x, cursor_y, self._cursor_width, self._cursor_height),
+                border_radius=self._cursor_width // 2
+            )
 
     def update(self, dt: float) -> None:
         super().update(dt)
@@ -261,7 +272,6 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
                 self._cursor_flash_timer = 0.0
                 self._cursor_visible = not self._cursor_visible
 
-
             # Detect press outside of the text input to unfocus
             mouse_pos = pygame.mouse.get_pos()
             pressed = pygame.mouse.get_pressed()[0]
@@ -272,14 +282,16 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
     def _key_backspace(self) -> None:
         # Backspace at cursor pos
         if self._cursor_pos > 0:
-            self._text_label.text = self._text_label.text[:self._cursor_pos - 1] + self._text_label.text[self._cursor_pos:]
+            self._text_label.text = self._text_label.text[:self._cursor_pos - 1] + self._text_label.text[
+                self._cursor_pos:]
             self._cursor_pos -= 1
             self._on_change.call()
 
     def _key_delete(self) -> None:
         # Delete at cursor pos
         if self._cursor_pos < len(self._text_label.text):
-            self._text_label.text = self._text_label.text[:self._cursor_pos] + self._text_label.text[self._cursor_pos + 1:]
+            self._text_label.text = self._text_label.text[:self._cursor_pos] + self._text_label.text[
+                self._cursor_pos + 1:]
             self._on_change.call()
 
     def handle_event(self, event: pygame.event.Event) -> None:
@@ -317,7 +329,8 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         if self._allowed_char_filter(char):
             if self._max_length is None or len(self._text_label.text) < self._max_length:
                 # Insert char at cursor pos
-                self._text_label.text = self._text_label.text[:self._cursor_pos] + char + self._text_label.text[self._cursor_pos:]
+                self._text_label.text = self._text_label.text[:self._cursor_pos] + char + self._text_label.text[
+                    self._cursor_pos:]
                 self._cursor_pos += 1
                 self._on_change.call()
 

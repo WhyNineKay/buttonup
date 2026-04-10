@@ -3,10 +3,11 @@ element.py
 """
 from pathlib import Path
 from typing import SupportsInt, Tuple, Union, Optional, List
+
 import pygame
 
-from ..theme import Theme, ThemeLike, load_theme
 from ..buttonup_types import Callback, FontLike
+from ..theme import Theme, ThemeLike, load_theme
 from ..utils import CallbackPackage, InteractionState, ParsingTools
 
 
@@ -188,7 +189,8 @@ class SizedElement(PositionalElement):
 
 class ResizableElement(SizedElement):
     """
-    Base class that allows for elements to have a position and size on the screen, and allows for changing the size of the element.
+    Base class that allows for elements to have a position and size on the screen, and allows for changing the size of
+    the element.
     """
 
     @property
@@ -244,7 +246,8 @@ class InteractiveElement(SizedElement, Element):
 
         if callback_package is None:
             raise TypeError(
-                f"Parameter '{parameter_name}' must be of type callable, CallbackPackage, or None, not '{type(callback)}'."
+                f"Parameter '{parameter_name}' must be of type callable, CallbackPackage, or None, not "
+                f"'{type(callback)}'."
             )
 
         return callback_package
@@ -407,7 +410,8 @@ class ContainerElement(Element, ResizableElement):
         if enforce_layout_cleanliness is None:
             self._enforce_layout_cleanliness = True
         else:
-            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(enforce_layout_cleanliness, "enforce_layout_cleanliness")
+            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(enforce_layout_cleanliness,
+                                                                              "enforce_layout_cleanliness")
 
         self._layout_dirty = True
 
@@ -418,7 +422,6 @@ class ContainerElement(Element, ResizableElement):
                                    "'apply' method to update the layout before drawing, updating, or handling events.")
             else:
                 self.apply()
-
 
     def _parse_elements(self, elements: List[SizedElement]) -> List[SizedElement]:
         if not isinstance(elements, list):
@@ -503,4 +506,3 @@ class ContainerElement(Element, ResizableElement):
 
         self._elements.extend(elements)
         self._layout_dirty = True
-

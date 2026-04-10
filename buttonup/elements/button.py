@@ -1,20 +1,21 @@
-from typing import SupportsInt, Union, Optional, Tuple, Dict
+from typing import SupportsInt, Union, Tuple, Dict
 
 import pygame
 
-from .. import constants
-from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
-    apply_surface_border_radius, Colors
+from .element import ResizableElement, InteractiveElement, ThemedElement
 from .label import Label
-from ..utils import InteractionState, Alignment
+from .. import constants
 from ..buttonup_types import Callback, RGB, FontLike, ColorLike
 from ..theme import ThemeLike, load_default_theme
 from ..utils import CallbackPackage, TEMP_COLOR
-from .element import Element, ResizableElement, InteractiveElement, ThemedElement, FontElement
+from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
+    apply_surface_border_radius, Colors
+from ..utils import InteractionState, Alignment
 
 
 class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
     """Base button class"""
+
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
@@ -104,7 +105,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
 
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)
-
 
     def draw(self, surface: pygame.Surface) -> None:
         if self._state == InteractionState.INACTIVE:
@@ -527,7 +527,8 @@ class ImageButton(BaseButton):
         self._preserve_aspect_ratio = self._parse_preserve_aspect_ratio(preserve_aspect_ratio)
 
         if image is None:
-            image = generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_WIDTH), colors=(Colors.PINK, Colors.PURPLE))
+            image = generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_WIDTH),
+                                         colors=(Colors.PINK, Colors.PURPLE))
 
         self._original_image = self._parse_image(image)
 
@@ -715,7 +716,6 @@ class ImageButton(BaseButton):
         return self._image.get_size()
 
 
-
 class SpriteButton(BaseButton):
     """Base button class with sprite"""
 
@@ -732,14 +732,25 @@ class SpriteButton(BaseButton):
 
         if sprite_sheet is None:
             sprite_sheet = {
-                InteractionState.INACTIVE: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.PINK, Colors.PURPLE)),
-                InteractionState.HOVERED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.BLUE, Colors.AQUA)),
-                InteractionState.PRESSED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.GREEN, Colors.LIME)),
-                InteractionState.DISABLED: generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT), colors=(Colors.RED, Colors.ORANGE)),
+                InteractionState.INACTIVE: generate_debug_image(
+                    (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
+                    colors=(Colors.PINK, Colors.PURPLE)),
+                InteractionState.HOVERED: generate_debug_image(
+                    (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
+                    colors=(Colors.BLUE, Colors.AQUA)),
+                InteractionState.PRESSED: generate_debug_image(
+                    (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
+                    colors=(Colors.GREEN, Colors.LIME)),
+                InteractionState.DISABLED: generate_debug_image(
+                    (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
+                    colors=(Colors.RED, Colors.ORANGE)),
             }
 
         self._original_sprite_sheet = self._parse_sprite_sheet(sprite_sheet)
-        self._original_image_aspect_ratio = self._original_sprite_sheet[InteractionState.INACTIVE].get_width() / self._original_sprite_sheet[InteractionState.INACTIVE].get_height()
+        sprite_sheet_inactive_image = self._original_sprite_sheet[InteractionState.INACTIVE]
+        self._original_image_aspect_ratio = (
+                sprite_sheet_inactive_image.get_width() / sprite_sheet_inactive_image.get_height()
+        )
 
         self._sprite_sheet = {
             state: self._original_sprite_sheet[state].copy() for state in InteractionState
@@ -776,9 +787,13 @@ class SpriteButton(BaseButton):
                 return
 
         for state in InteractionState:
-            self._sprite_sheet[state] = pygame.transform.scale(self._original_sprite_sheet[state], (self._width, self._height))
+            self._sprite_sheet[state] = pygame.transform.scale(self._original_sprite_sheet[state],
+                                                               (self._width, self._height))
 
-    def _parse_sprite_sheet(self, sprite_sheet: Dict[InteractionState, pygame.Surface]) -> Dict[InteractionState, pygame.Surface]:
+    def _parse_sprite_sheet(
+            self,
+            sprite_sheet: Dict[InteractionState, pygame.Surface]
+    ) -> Dict[InteractionState, pygame.Surface]:
         if not isinstance(sprite_sheet, dict):
             raise TypeError(f"Sprite sheet must be of type 'dict', not '{type(sprite_sheet)}'.")
 
@@ -789,12 +804,18 @@ class SpriteButton(BaseButton):
                 raise ValueError(f"Sprite sheet is missing image for state '{state}'.")
 
             if not isinstance(sprite_sheet[state], pygame.Surface):
-                raise TypeError(f"Sprite sheet image for state '{state}' must be of type 'pygame.Surface', not '{type(sprite_sheet[state])}'.")
+                raise TypeError(
+                    f"Sprite sheet image for state '{state}' must be of type 'pygame.Surface', not "
+                    f"'{type(sprite_sheet[state])}'."
+                )
 
             if size is None:
                 size = sprite_sheet[state].get_size()
             elif sprite_sheet[state].get_size() != size:
-                raise ValueError(f"All images in the sprite sheet must be the same size. Expected size {size}, but got {sprite_sheet[state].get_size()} for state '{state}'.")
+                raise ValueError(
+                    f"All images in the sprite sheet must be the same size. Expected size {size}, but got "
+                    f"{sprite_sheet[state].get_size()} for state '{state}'."
+                )
 
         return sprite_sheet
 
@@ -804,9 +825,6 @@ class SpriteButton(BaseButton):
         image_rect.center = self.center
         surface.blit(image, image_rect)
 
-
     def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         super()._update_dimensions(width, height)
         self._resize_sprite_sheet()
-
-

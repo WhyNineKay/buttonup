@@ -1,14 +1,14 @@
+from enum import Enum, auto
 from typing import SupportsInt, Union, Optional
 
 import pygame
 
-from .element import InteractionState, InteractiveElement, ResizableElement, ThemedElement
+from .element import InteractionState, InteractiveElement, ThemedElement
 from .label import Label
+from .. import constants
 from ..buttonup_types import Callback, BoolCallback, FontLike, RGB
 from ..theme import ThemeLike, load_default_theme, CheckboxTheme
-from ..utils import CallbackPackage, TEMP_COLOR, ParsingTools
-from .. import constants
-from enum import Enum, auto
+from ..utils import CallbackPackage, ParsingTools
 
 
 class CheckStyle(Enum):
@@ -85,7 +85,8 @@ class Checkbox(InteractiveElement, ThemedElement):
 
         if len(self._on_toggle.args) > 0:
             raise ValueError(
-                "on_toggle callback cannot have any positional arguments as new checked state will be passed as the only argument when called.")
+                "on_toggle callback cannot have any positional arguments as new checked state will be passed as the "
+                "only argument when called.")
 
         self._size = self._parse_size(size)
 
@@ -263,7 +264,8 @@ class Checkbox(InteractiveElement, ThemedElement):
         text_color = self._get_text_color()
 
         pygame.draw.rect(surface, base_color, self._checkbox_rect, border_radius=self._border_radius)
-        pygame.draw.rect(surface, border_color, self._checkbox_rect, width=self._border_width, border_radius=self._border_radius)
+        pygame.draw.rect(surface, border_color, self._checkbox_rect, width=self._border_width,
+                         border_radius=self._border_radius)
 
         if self._checked:
             self._draw_check(surface, check_color)

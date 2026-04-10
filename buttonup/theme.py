@@ -12,7 +12,7 @@ import copy
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Union, Optional
+from typing import Dict, Optional
 
 from .buttonup_types import RGB
 from .utils import ColorTools
@@ -27,6 +27,7 @@ class LabelTheme:
 
     def copy(self) -> "LabelTheme":
         return copy.copy(self)
+
 
 @dataclass
 class ButtonTheme:
@@ -45,6 +46,7 @@ class ButtonTheme:
 
     def copy(self) -> "ButtonTheme":
         return copy.copy(self)
+
 
 @dataclass
 class ColorTheme:
@@ -182,7 +184,6 @@ class Theme:
             text_background=self._parse_element_color(color_dict, "colors", "text_background")
         )
 
-
     def _parse_button_dict(self, theme_dict: Dict) -> ButtonTheme:
         element_name = "button"
         element_dict = self._get_element_dict(theme_dict, element_name)
@@ -274,6 +275,7 @@ class Theme:
     def text_input_theme(self) -> TextInputTheme:
         return self._text_input_theme
 
+
 ThemeLike = Theme | Dict | str | Path
 
 
@@ -346,4 +348,3 @@ def load_theme(theme: ThemeLike) -> Theme:
 
 def load_default_theme() -> Theme:
     return Theme(_load_builtin_theme_dict(DEFAULT_THEME_NAME))
-

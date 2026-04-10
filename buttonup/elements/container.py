@@ -1,12 +1,12 @@
+import math
 from enum import Enum, auto
 from typing import SupportsInt, List
 
 import pygame
 
-from .. import constants
 from .element import ContainerElement, SizedElement
+from .. import constants
 from ..utils import ParsingTools
-import math
 
 
 class GridFillOrder(Enum):
@@ -145,12 +145,10 @@ class Grid(ContainerElement):
 
         self._column_width = self._calculate_column_width()
 
-
         if row_height is None:
             row_height = self._column_width
 
         self._row_height = ParsingTools.parse_non_negative_int(row_height, "row_height")
-
 
     def _calculate_column_width(self) -> int:
         total_spacing = self._spacing * (self._columns - 1)
@@ -199,17 +197,18 @@ class Grid(ContainerElement):
 
             element.pos = (x, y)
 
-
     def debug_draw(self, surface: pygame.Surface) -> None:
         super().debug_draw(surface)
 
         # Draw column lines.
         for i in range(1, self._columns):
             x = self._x + self._padding + i * (self._column_width + self._spacing) - self._spacing // 2
-            pygame.draw.line(surface, (0, 127, 255), (x, self._y + self._padding), (x, self._y + self._height - self._padding), 1)
+            pygame.draw.line(surface, (0, 127, 255), (x, self._y + self._padding),
+                             (x, self._y + self._height - self._padding), 1)
 
         # Draw row lines.
         rows = math.ceil(len(self._elements) / self._columns)
         for i in range(1, rows):
             y = self._y + self._padding + i * (self._row_height + self._spacing) - self._spacing // 2
-            pygame.draw.line(surface, (0, 127, 255), (self._x + self._padding, y), (self._x + self._width - self._padding, y), 1)
+            pygame.draw.line(surface, (0, 127, 255), (self._x + self._padding, y),
+                             (self._x + self._width - self._padding, y), 1)
