@@ -63,7 +63,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         self._text_padding = self._parse_text_padding(text_padding)
 
         if allowed_char_filter is None:
-            allowed_char_filter = dummy_function
+            allowed_char_filter = lambda char: True
 
         self._allowed_char_filter = self._parse_allowed_char_filter(allowed_char_filter)
 
