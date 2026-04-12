@@ -25,6 +25,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
                  placeholder: str = None,
                  max_length: SupportsInt = None,
                  allowed_char_filter: Callable[[str], bool] = None,
+                 char_transform_function: Callable[[str], str] = None,
                  on_change: Union[Callback, CallbackPackage] = None,
                  on_submit: Union[Callback, CallbackPackage] = None,
                  text_padding: SupportsInt = None
@@ -66,6 +67,11 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
             allowed_char_filter = lambda char: True
 
         self._allowed_char_filter = self._parse_allowed_char_filter(allowed_char_filter)
+
+        if char_transform_function is None:
+            char_transform_function = lambda char: char
+
+        self._char_transform_function = self._parse_char_transform_function(char_transform_function)
 
         self._max_length: Union[int, None] = self._parse_max_length(max_length)
 
@@ -125,6 +131,14 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
 
         self._text_label._update_colors()
         self._placeholder_label.text_color = self._placeholder_color
+
+    def _parse_char_transform_function(self, char_transform_function: Callable[[str], str]) -> Callable[[str], str]:
+        if not callable(char_transform_function):
+            raise TypeError(
+                f"TextInput char_transform_function must be a callable that takes a single string argument and returns a"
+                f"string, not '{type(char_transform_function)}'."
+            )
+        return char_transform_function
 
     def _parse_on_change(
             self,
@@ -326,13 +340,28 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         self._cursor_visible = True
 
     def _key_char(self, char: str) -> None:
-        if self._allowed_char_filter(char):
-            if self._max_length is None or len(self._text_label.text) < self._max_length:
-                # Insert char at cursor pos
-                self._text_label.text = self._text_label.text[:self._cursor_pos] + char + self._text_label.text[
-                    self._cursor_pos:]
-                self._cursor_pos += 1
-                self._on_change.call()
+        char = self._char_transform_function(char)
+        # char_transform_function may return "" or string with multiple characters.
+
+        if not isinstance(char, str) or char == "":
+            return
+
+        if not all(self._allowed_char_filter(c) for c in char):
+            return
+
+        insert_text = char
+        if self._max_length is not None:
+            remaining = self._max_length - len(self._text_label.text)
+            if remaining <= 0:
+                return
+            insert_text = insert_text[:remaining]
+
+        if insert_text:
+            self._text_label.text = (
+                self._text_label.text[:self._cursor_pos] + insert_text + self._text_label.text[self._cursor_pos:]
+            )
+            self._cursor_pos += len(insert_text)
+            self._on_change.call()
 
     def _key_home(self) -> None:
         self._cursor_pos = 0
