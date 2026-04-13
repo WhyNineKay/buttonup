@@ -8,6 +8,10 @@ from .. import constants
 from ..buttonup_types import FontLike, Callback, RGB
 from ..theme import ThemeLike, load_default_theme
 from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function, ParsingTools
+import string
+
+WORD_CHARACTERS = string.ascii_letters + string.digits + "_"
+SEPERATOR_CHARACTERS = string.punctuation.replace("_", "") + " "
 
 
 class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedElement):
@@ -82,6 +86,10 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         InteractiveElement.__init__(self, x=x, y=y, width=width, height=height, on_click=self._on_click,
                                     on_hover=self._on_hover)
         self._update_position(self._x, self._y)  # Required to position the text label correctly
+
+        self._label_clipping_surface = pygame.Surface(
+            (self._width, self._height), pygame.SRCALPHA
+        )
 
         self._base_color: RGB = TEMP_COLOR
         self._base_color_focused: RGB = TEMP_COLOR
@@ -172,24 +180,68 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             raise TypeError(f"TextInput placeholder must be of type 'str', not '{type(placeholder)}'.")
         return placeholder
 
+    def _available_text_width(self) -> int:
+        return max(0, self._width - 2 * self._text_padding)
+
+    def _cursor_text_x(self) -> int:
+        return self._text_label.font.size(self._text_label.text[:self._cursor_pos])[0]
+
+    def _ensure_cursor_visible(self) -> None:
+        text_width = self._text_label.width
+        available_width = self._available_text_width()
+
+        if text_width <= available_width:
+            self._text_label.x = self._text_padding
+            return
+
+        min_label_x = self._text_padding - (text_width - available_width)
+        max_label_x = self._text_padding
+
+        caret_x = self._text_label.x + self._cursor_text_x()
+        left_bound = self._text_padding
+        right_bound = self._width - self._text_padding
+
+        if caret_x < left_bound:
+            self._text_label.x += left_bound - caret_x
+        elif caret_x > right_bound:
+            self._text_label.x -= caret_x - right_bound
+
+        self._text_label.x = max(min_label_x, min(max_label_x, self._text_label.x))
+
+    def _set_cursor_pos(self, cursor_pos: int) -> None:
+        self._cursor_pos = max(0, min(len(self._text_label.text), cursor_pos))
+        self._ensure_cursor_visible()
+
     def _move_cursor_from_click(self, mouse_x: int) -> None:
-        relative_x = mouse_x - self._text_label.x
-        pos = 0
-        for i in range(len(self._text_label.text) + 1):
-            if i < len(self._text_label.text):
-                char_width = self._text_label.font.size(self._text_label.text[i])[0]
-            else:
-                char_width = 0
+        local_x = int(mouse_x) - self._x
+        text_x = local_x - self._text_label.x
 
-            if relative_x < char_width / 2:
-                break
+        if text_x <= 0:
+            self._set_cursor_pos(0)
+            return
 
-            relative_x -= char_width
-            pos += 1
+        text = self._text_label.text
 
-        self._cursor_pos = pos
+        if text == "":
+            self._set_cursor_pos(0)
+            return
 
-        self._reset_cursor_timer()
+        previous_width = 0
+        font = self._text_label.font
+
+        for index in range(1, len(text) + 1):
+            current_width = font.size(text[:index])[0]
+
+            if current_width >= text_x:
+                if abs(text_x - previous_width) <= abs(current_width - text_x):
+                    self._set_cursor_pos(index - 1)
+                else:
+                    self._set_cursor_pos(index)
+                return
+
+            previous_width = current_width
+
+        self._set_cursor_pos(len(text))
 
     def _on_click(self) -> None:
         # Move the clicked position to the cursor
@@ -205,10 +257,14 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
 
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
         super()._update_position(x, y)
-        self._text_label.x = self._x + self._text_padding
-        self._text_label.centery = self._y + self._height / 2
+
+        # Position labels relatively
+        self._text_label.x = self._text_padding
+        self._text_label.centery = self._height / 2
+
         self._placeholder_label.x = self._text_label.x
         self._placeholder_label.centery = self._text_label.centery
+        self._ensure_cursor_visible()
 
     def draw(self, surface: pygame.Surface) -> None:
         # Draw the text input background and border
@@ -235,17 +291,24 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             pygame.draw.rect(surface, border_color, self._rect, width=self._border_width,
                              border_radius=self._border_radius)
 
+        # Fill the label clipping surface with the text or placeholder
+        self._label_clipping_surface.fill((0, 0, 0, 0))  # Clear with transparent
+
         # Draw the text or placeholder
         if len(self._text_label.text) == 0:
-            self._placeholder_label.draw(surface)
+            self._placeholder_label.draw(self._label_clipping_surface)
         else:
-            self._text_label.draw(surface)
+            self._text_label.draw(self._label_clipping_surface)
+
+        # Blit the clipping surface onto the main surface with appropriate offset
+        surface.blit(self._label_clipping_surface, (self._x, self._y))
 
         # Draw the cursor if focused
         if self._focused and self._cursor_visible:
             # Draw a rect
-            cursor_x = self._text_label.x + self._text_label.font.size(self._text_label.text[:self._cursor_pos])[0]
-            cursor_y = self._text_label.y
+            cursor_x = self._x + self._text_label.x + \
+                       self._text_label.font.size(self._text_label.text[:self._cursor_pos])[0]
+            cursor_y = self._y + self._text_label.y
             pygame.draw.rect(
                 surface,
                 self._caret_color,
@@ -270,20 +333,53 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             if not self._rect.collidepoint(mouse_pos) and pressed:
                 self._unfocus()
 
+    def _update_label_text(self, new_text: str) -> None:
+        self._text_label.text = new_text
+        self._on_change.call()
+        self._set_cursor_pos(self._cursor_pos)
+
     def _key_backspace(self) -> None:
-        # Backspace at cursor pos
-        if self._cursor_pos > 0:
-            self._text_label.text = self._text_label.text[:self._cursor_pos - 1] + self._text_label.text[
-                self._cursor_pos:]
-            self._cursor_pos -= 1
-            self._on_change.call()
+        # Delete before cursor pos
+        if self._cursor_pos <= 0:
+            return
+
+        if pygame.key.get_mods() & pygame.KMOD_CTRL:
+            delta = self._word_offset_delta(-1)
+
+            if delta == 0:
+                return
+
+            delete_start = self._cursor_pos + delta
+            self._cursor_pos = delete_start
+            self._update_label_text(
+                self._text_label.text[:delete_start] + self._text_label.text[delete_start - delta:]
+            )
+            return
+
+        self._cursor_pos -= 1
+        self._update_label_text(
+            self._text_label.text[:self._cursor_pos] + self._text_label.text[self._cursor_pos + 1:]
+        )
+
 
     def _key_delete(self) -> None:
         # Delete at cursor pos
-        if self._cursor_pos < len(self._text_label.text):
-            self._text_label.text = self._text_label.text[:self._cursor_pos] + self._text_label.text[
-                self._cursor_pos + 1:]
-            self._on_change.call()
+        if pygame.key.get_mods() & pygame.KMOD_CTRL:
+            # Use self._word_offset_delta to find the next word boundary
+            delta = self._word_offset_delta(1)
+
+            if delta == 0:
+                return
+
+            self._update_label_text(
+                self._text_label.text[:self._cursor_pos] + self._text_label.text[self._cursor_pos + delta:]
+            )
+        else:
+            if self._cursor_pos < len(self._text_label.text):
+                self._update_label_text(
+                    self._text_label.text[:self._cursor_pos] + self._text_label.text[self._cursor_pos + 1:]
+                )
+
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if not self._focused:
@@ -327,37 +423,88 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             return
 
         insert_text = char
+
         if self._max_length is not None:
             remaining = self._max_length - len(self._text_label.text)
+
             if remaining <= 0:
                 return
+
             insert_text = insert_text[:remaining]
 
         if insert_text:
-            self._text_label.text = (
+            self._update_label_text(
                 self._text_label.text[:self._cursor_pos] + insert_text + self._text_label.text[self._cursor_pos:]
             )
-            self._cursor_pos += len(insert_text)
-            self._on_change.call()
+            self._set_cursor_pos(self._cursor_pos + len(insert_text))
 
     def _key_home(self) -> None:
-        self._cursor_pos = 0
+        self._set_cursor_pos(0)
 
     def _key_end(self) -> None:
-        self._cursor_pos = len(self._text_label.text)
+        self._set_cursor_pos(len(self._text_label.text))
 
     def _key_enter(self) -> None:
         self._on_submit.call()
         self._unfocus()
 
     def _move_cursor_delta(self, delta: int) -> None:
-        self._cursor_pos = max(0, min(len(self._text_label.text), self._cursor_pos + delta))
+        self._set_cursor_pos(self._cursor_pos + delta)
 
     def _key_left(self) -> None:
-        self._move_cursor_delta(-1)
+        if pygame.key.get_mods() & pygame.KMOD_CTRL:
+            self._move_cursor_jump_delta(-1)
+        else:
+            self._move_cursor_delta(-1)
 
     def _key_right(self) -> None:
-        self._move_cursor_delta(1)
+        if pygame.key.get_mods() & pygame.KMOD_CTRL:
+            self._move_cursor_jump_delta(1)
+        else:
+            self._move_cursor_delta(1)
 
     def _unfocus(self) -> None:
         self._focused = False
+
+        # Move label back to default position when unfocusing
+        self._text_label.x = self._text_padding
+
+    def _move_cursor_jump_delta(self, direction: int) -> None:
+        delta = self._word_offset_delta(direction)
+        self._move_cursor_delta(delta)
+
+    def _word_offset_delta(self, direction: int) -> int:
+        if direction not in {-1, 1}:
+            raise ValueError(f"direction must be -1 or 1, not {direction}.")
+
+        text = self._text_label.text
+        text_length = len(text)
+        cursor_pos = self._cursor_pos
+
+        if text_length == 0:
+            return 0
+
+        if direction > 0:
+            if cursor_pos >= text_length:
+                return 0
+
+            index = cursor_pos
+
+            # Code-editor style: jump across exactly one run (word or separator).
+            current_is_word = text[index] in WORD_CHARACTERS
+            while index < text_length and (text[index] in WORD_CHARACTERS) == current_is_word:
+                index += 1
+
+            return index - cursor_pos
+
+        if cursor_pos <= 0:
+            return 0
+
+        index = cursor_pos
+
+        # Code-editor style: jump left across exactly one run (word or separator).
+        current_is_word = text[index - 1] in WORD_CHARACTERS
+        while index > 0 and (text[index - 1] in WORD_CHARACTERS) == current_is_word:
+            index -= 1
+
+        return index - cursor_pos
