@@ -1,17 +1,127 @@
 import math
 from enum import Enum, auto
-from typing import SupportsInt, List
+from typing import SupportsInt, List, Optional
 
 import pygame
 
-from .element import ContainerElement, SizedElement
+from .element import ContainerElement, SizedElement, ResizableElement, ThemedElement, Element, BorderedElement
 from .. import constants
+from ..theme import load_default_theme, ThemeLike
 from ..utils import ParsingTools
 
 
 class GridFillOrder(Enum):
     ROW_MAJOR = auto()
     COLUMN_MAJOR = auto()
+
+
+class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 theme: ThemeLike = None,
+                 element: SizedElement = None,
+                 padding: SupportsInt = None,
+                 border_radius: SupportsInt = None,
+                 border_width: SupportsInt = None,
+                 ) -> None:
+        if element is None:
+            self._element = None
+        else:
+            self._element = self._parse_element(element)
+
+        ResizableElement.__init__(self, x, y, width, height)
+
+        if theme is None:
+            theme = load_default_theme()
+
+        ThemedElement.__init__(self, theme=theme)
+
+        if padding is None:
+            padding = constants.DEFAULT_CONTAINER_PADDING
+
+        self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
+
+        if border_radius is None:
+            border_radius = constants.DEFAULT_CONTAINER_BORDER_RADIUS
+
+        if border_width is None:
+            border_width = constants.DEFAULT_CONTAINER_BORDER_WIDTH
+
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
+
+        self._container_theme = self._theme.container_theme.copy()
+
+    def draw(self, surface: pygame.Surface) -> None:
+        # Draw background
+        pygame.draw.rect(surface, self._container_theme.base_color, self._rect, border_radius=self._border_radius)
+
+        # Draw border
+        if self._border_width > 0:
+            pygame.draw.rect(surface, self._container_theme.border_color, self._rect, width=self._border_width, border_radius=self._border_radius)
+
+        if self._element is not None and isinstance(self._element, Element):
+            self._element.draw(surface)
+
+    def update(self, dt: float) -> None:
+        if self._element is not None and isinstance(self._element, Element):
+            self._element.update(dt)
+
+    def debug_draw(self, surface: pygame.Surface) -> None:
+        super().debug_draw(surface)
+
+        if self._element is not None and isinstance(self._element, Element):
+            self._element.debug_draw(surface)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if self._element is not None and isinstance(self._element, Element):
+            self._element.handle_event(event)
+
+    def _parse_element(self, element: SizedElement) -> SizedElement:
+        if not isinstance(element, SizedElement):
+            raise TypeError(f"Panel element must be of type 'SizedElement', not '{type(element)}'.")
+
+        return element
+
+    def _update_element_position(self) -> None:
+        if self._element is not None:
+            # Top left
+            element_x = self._x + self._padding
+            element_y = self._y + self._padding
+            self._element.pos = (element_x, element_y)
+
+    def _update_element_size(self) -> None:
+        if self._element is not None:
+            occupied_width = self._element.width + self._padding * 2
+            occupied_height = self._element.height + self._padding * 2
+
+            if occupied_width > self._width or occupied_height > self._height:
+                # Resize panel to fit element with padding.
+                new_width = max(self._width, occupied_width)
+                new_height = max(self._height, occupied_height)
+
+                self._update_dimensions(new_width, new_height)
+
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        super()._update_dimensions(width, height)
+        self._update_element_size()
+
+    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        super()._update_position(x, y)
+        self._update_element_position()
+
+    @property
+    def element(self) -> Optional[SizedElement]:
+        return self._element
+
+    @element.setter
+    def element(self, element: SizedElement) -> None:
+        self._element = self._parse_element(element)
+        self._update_element_position()
+        self._update_element_size()
+
 
 
 class VBox(ContainerElement):
@@ -170,6 +280,9 @@ class Grid(ContainerElement):
             raise TypeError(f"columns must be of type 'int' or support __int__ conversion, not '{type(columns)}'.")
 
         columns_int = int(columns)
+
+        if columns_int <= 0:
+            raise ValueError("columns must be greater than 0.")
 
         return columns_int
 
