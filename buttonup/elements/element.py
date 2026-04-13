@@ -237,6 +237,7 @@ class InteractiveElement(SizedElement, Element):
 
         self._state: InteractionState = InteractionState.INACTIVE
         self._previous_pressed: bool = False
+        self._started_click_on_element: bool = False
 
     def _parse_named_callback(self,
                               callback: Union[CallbackPackage, Callback, None],
@@ -293,14 +294,20 @@ class InteractiveElement(SizedElement, Element):
         if current_pressed and not self._previous_pressed:
             if is_mouse_over:
                 self._state = InteractionState.PRESSED
+                self._started_click_on_element = True
+            else:
+                self._started_click_on_element = False
 
         # Mouse button just released
         if not current_pressed and self._previous_pressed:
-            if is_mouse_over:
+            if is_mouse_over and self._started_click_on_element:
                 self._on_click_callback_package.call()
                 self._state = InteractionState.HOVERED
             else:
                 self._state = InteractionState.INACTIVE
+
+            # Reset started flag after release
+            self._started_click_on_element = False
 
         self._previous_pressed = current_pressed
 
