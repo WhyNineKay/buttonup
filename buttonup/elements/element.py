@@ -506,3 +506,31 @@ class ContainerElement(Element, ResizableElement):
 
         self._elements.extend(elements)
         self._layout_dirty = True
+
+
+class BorderedElement:
+    def __init__(self, border_radius: SupportsInt, border_width: SupportsInt) -> None:
+        self._border_radius = self._parse_border_radius(border_radius)
+        self._border_width = self._parse_border_width(border_width)
+
+    def _parse_border_radius(self, value: SupportsInt) -> int:
+        return ParsingTools.parse_non_negative_int(value, "border_radius")
+
+    def _parse_border_width(self, value: SupportsInt) -> int:
+        return ParsingTools.parse_non_negative_int(value, "border_width")
+
+    @property
+    def border_radius(self) -> int:
+        return self._border_radius
+
+    @border_radius.setter
+    def border_radius(self, value: SupportsInt) -> None:
+        self._border_radius = self._parse_border_radius(value)
+
+    @property
+    def border_width(self) -> int:
+        return self._border_width
+
+    @border_width.setter
+    def border_width(self, value: SupportsInt) -> None:
+        self._border_width = self._parse_border_width(value)

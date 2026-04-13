@@ -63,6 +63,11 @@
       "text_color_disabled": "#8E8E8E",
       "placeholder_color": "#7A7A7A",
       "caret_color": "#FFFFFF"
+    },
+    "container": {
+      "base_color": "#24272A",
+      "border_color": "#3B4044",
+      "text_color": "#E2E2E2"
     }
   }
 }

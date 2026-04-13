@@ -3,7 +3,7 @@ from . import richtext
 from . import theme
 from .elements.button import TextButton, ImageButton, SpriteButton
 from .elements.checkbox import Checkbox
-from .elements.container import VBox, HBox, Grid
+from .elements.container import VBox, HBox, Grid, Panel
 from .elements.label import Label
 from .elements.text_input import TextInput
 from .utils import InteractionState

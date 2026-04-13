@@ -109,6 +109,16 @@ class TextInputTheme:
         return copy.copy(self)
 
 
+@dataclass
+class ContainerTheme:
+    base_color: RGB
+    border_color: RGB
+    text_color: RGB
+
+    def copy(self) -> "ContainerTheme":
+        return copy.copy(self)
+
+
 class Theme:
     def __init__(self, theme_dict: Dict) -> None:
         self._name = self._parse_name(theme_dict)
@@ -118,6 +128,17 @@ class Theme:
         self._color_theme = self._parse_color_dict(theme_dict)
         self._checkbox_theme = self._parse_checkbox_dict(theme_dict)
         self._text_input_theme = self._parse_text_input_dict(theme_dict)
+        self._container_theme = self._parse_container_dict(theme_dict)
+
+    def _parse_container_dict(self, theme_dict: Dict) -> ContainerTheme:
+        element_name = "container"
+        element_dict = self._get_element_dict(theme_dict, element_name)
+
+        return ContainerTheme(
+            base_color=self._parse_element_color(element_dict, element_name, "base_color"),
+            border_color=self._parse_element_color(element_dict, element_name, "border_color"),
+            text_color=self._parse_element_color(element_dict, element_name, "text_color")
+        )
 
     def _parse_text_input_dict(self, theme_dict: Dict) -> TextInputTheme:
         element_name = "text_input"
@@ -275,6 +296,9 @@ class Theme:
     def text_input_theme(self) -> TextInputTheme:
         return self._text_input_theme
 
+    @property
+    def container_theme(self) -> ContainerTheme:
+        return self._container_theme
 
 ThemeLike = Theme | Dict | str | Path
 
