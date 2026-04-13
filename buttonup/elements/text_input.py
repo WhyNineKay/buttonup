@@ -7,7 +7,7 @@ from .label import Label
 from .. import constants
 from ..buttonup_types import FontLike, Callback, RGB
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function
+from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function, ParsingTools
 
 
 class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedElement):
@@ -153,11 +153,8 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
     def _parse_max_length(self, max_length: Union[SupportsInt, None]) -> Union[int, None]:
         if max_length is None:
             return None
-        if not isinstance(max_length, int):
-            raise TypeError(f"TextInput max_length must be of type 'int' or 'None', not '{type(max_length)}'.")
-        if max_length < 0:
-            raise ValueError("TextInput max_length cannot be negative.")
-        return max_length
+
+        return ParsingTools.parse_non_negative_int(max_length, "max_length")
 
     def _parse_allowed_char_filter(self, allowed_char_filter: Callable[[str], bool]) -> Callable[[str], bool]:
         if not callable(allowed_char_filter):
@@ -168,11 +165,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         return allowed_char_filter
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
-        if not isinstance(text_padding, int):
-            raise TypeError(f"TextInput text_padding must be of type 'int', not '{type(text_padding)}'.")
-        if text_padding < 0:
-            raise ValueError("TextInput text_padding cannot be negative.")
-        return text_padding
+        return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
 
     def _parse_placeholder(self, placeholder: str) -> str:
         if not isinstance(placeholder, str):

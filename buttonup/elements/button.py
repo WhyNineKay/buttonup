@@ -7,7 +7,7 @@ from .label import Label
 from .. import constants
 from ..buttonup_types import Callback, RGB, FontLike, ColorLike
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR
+from ..utils import CallbackPackage, TEMP_COLOR, ParsingTools
 from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
     apply_surface_border_radius, Colors
 from ..utils import InteractionState, Alignment
@@ -253,16 +253,7 @@ class TextButton(BaseButton):
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
-        if not hasattr(text_padding, "__int__"):
-            raise TypeError(
-                f"Text padding must be of type 'int' or support __int__ conversion, not '{type(text_padding)}'.")
-
-        text_padding = int(text_padding)
-
-        if text_padding < 0:
-            raise ValueError(f"Text padding must be non-negative, not '{text_padding}'.")
-
-        return text_padding
+        return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
 
     def _parse_text_alignment(self, text_alignment: Alignment) -> Alignment:
         if not isinstance(text_alignment, Alignment):
@@ -496,30 +487,16 @@ class ImageButton(BaseButton):
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
     def _parse_padding(self, padding: SupportsInt) -> int:
-        if not hasattr(padding, "__int__"):
-            raise TypeError(f"Padding must be of type 'int' or support __int__ conversion, not '{type(padding)}'.")
-
-        padding = int(padding)
-
-        if padding < 0:
-            raise ValueError(f"Padding must be non-negative, not '{padding}'.")
-
-        return padding
+        return ParsingTools.parse_non_negative_int(padding, "padding")
 
     def _parse_preserve_aspect_ratio(self, preserve_aspect_ratio: bool) -> bool:
-        if not isinstance(preserve_aspect_ratio, bool):
-            raise TypeError(f"Preserve aspect ratio flag must be of type 'bool', not '{type(preserve_aspect_ratio)}'.")
-        return preserve_aspect_ratio
+        return ParsingTools.parse_bool_strict(preserve_aspect_ratio, "preserve_aspect_ratio")
 
     def _parse_image_size_dominant(self, image_size_dominant: bool) -> bool:
-        if not isinstance(image_size_dominant, bool):
-            raise TypeError(f"Image size dominant flag must be of type 'bool', not '{type(image_size_dominant)}'.")
-        return image_size_dominant
+        return ParsingTools.parse_bool_strict(image_size_dominant, "image_size_dominant")
 
     def _parse_state_changing_images(self, state_changing_images: bool) -> bool:
-        if not isinstance(state_changing_images, bool):
-            raise TypeError(f"State changing images flag must be of type 'bool', not '{type(state_changing_images)}'.")
-        return state_changing_images
+        return ParsingTools.parse_bool_strict(state_changing_images, "state_changing_images")
 
     def _generate_hovered_image(self) -> pygame.Surface:
         hovered_image = self._image.copy()
@@ -720,9 +697,7 @@ class SpriteButton(BaseButton):
                             on_hover=on_hover, border_radius=0, border_width=0)
 
     def _parse_preserve_aspect_ratio(self, preserve_aspect_ratio: bool) -> bool:
-        if not isinstance(preserve_aspect_ratio, bool):
-            raise TypeError(f"Preserve aspect ratio flag must be of type 'bool', not '{type(preserve_aspect_ratio)}'.")
-        return preserve_aspect_ratio
+        return ParsingTools.parse_bool_strict(preserve_aspect_ratio, "preserve_aspect_ratio")
 
     def _resize_sprite_sheet(self) -> None:
         if self._preserve_aspect_ratio:
