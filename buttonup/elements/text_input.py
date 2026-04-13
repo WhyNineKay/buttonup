@@ -200,6 +200,8 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
 
         self._focused = True
 
+        self._reset_cursor_timer()
+
     def _on_hover(self) -> None:
         pass
 
