@@ -525,7 +525,7 @@ class BorderedElement:
 
     @border_radius.setter
     def border_radius(self, value: SupportsInt) -> None:
-        self._border_radius = self._parse_border_radius(value)
+        self._update_border_radius(value)
 
     @property
     def border_width(self) -> int:
@@ -533,4 +533,10 @@ class BorderedElement:
 
     @border_width.setter
     def border_width(self, value: SupportsInt) -> None:
+        self._update_border_width(value)
+
+    def _update_border_radius(self, value: SupportsInt) -> None:
+        self._border_radius = self._parse_border_radius(value)
+
+    def _update_border_width(self, value: SupportsInt) -> None:
         self._border_width = self._parse_border_width(value)

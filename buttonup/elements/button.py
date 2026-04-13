@@ -2,7 +2,7 @@ from typing import SupportsInt, Union, Tuple, Dict
 
 import pygame
 
-from .element import ResizableElement, InteractiveElement, ThemedElement
+from .element import ResizableElement, InteractiveElement, ThemedElement, BorderedElement
 from .label import Label
 from .. import constants
 from ..buttonup_types import Callback, RGB, FontLike, ColorLike
@@ -13,7 +13,7 @@ from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, gene
 from ..utils import InteractionState, Alignment
 
 
-class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
+class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedElement):
     """Base button class"""
 
     def __init__(self,
@@ -36,12 +36,10 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         if border_radius is None:
             border_radius = constants.DEFAULT_BUTTON_BORDER_RADIUS
 
-        self._border_radius = self._parse_border_radius(border_radius)
-
         if border_width is None:
             border_width = constants.DEFAULT_BUTTON_BORDER_WIDTH
 
-        self._border_width = self._parse_border_width(border_width)
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
 
         InteractiveElement.__init__(self, x=x, y=y, width=width, height=height, on_click=on_click, on_hover=on_hover)
 
@@ -79,30 +77,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         self._border_color_hovered = self.theme.button_theme.border_color_hovered
         self._border_color_disabled = self.theme.button_theme.border_color_disabled
 
-    def _parse_border_radius(self, border_radius: SupportsInt) -> int:
-        if not hasattr(border_radius, "__int__"):
-            raise TypeError(
-                f"Border radius must be of type 'int' or support __int__ conversion, not '{type(border_radius)}'.")
-
-        border_radius = int(border_radius)
-
-        if border_radius < 0:
-            raise ValueError(f"Border radius must be non-negative, not '{border_radius}'.")
-
-        return border_radius
-
-    def _parse_border_width(self, border_width: SupportsInt) -> int:
-        if not hasattr(border_width, "__int__"):
-            raise TypeError(
-                f"Border width must be of type 'int' or support __int__ conversion, not '{type(border_width)}'.")
-
-        border_width = int(border_width)
-
-        if border_width < 0:
-            raise ValueError(f"Border width must be non-negative, not '{border_width}'.")
-
-        return border_width
-
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)
 
@@ -129,9 +103,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         # Draw border
         pygame.draw.rect(surface, state_border_color, self.rect, width=self._border_width,
                          border_radius=self._border_radius)
-
-    def _update_border_radius(self, border_radius: int) -> None:
-        self._border_radius = border_radius
 
     @property
     def base_color(self) -> RGB:
@@ -221,22 +192,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         else:
             raise ValueError(f"Color 'border_color_disabled' must be a valid color, not '{value}'.")
 
-    @property
-    def border_radius(self) -> int:
-        return self._border_radius
-
-    @border_radius.setter
-    def border_radius(self, value: SupportsInt) -> None:
-        border_radius = self._parse_border_radius(value)
-        self._update_border_radius(border_radius)
-
-    @property
-    def border_width(self) -> int:
-        return self._border_width
-
-    @border_width.setter
-    def border_width(self, value: SupportsInt) -> None:
-        self._border_width = self._parse_border_width(value)
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (255, 0, 0), self.rect, width=1)

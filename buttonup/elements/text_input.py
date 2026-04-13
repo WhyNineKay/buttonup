@@ -2,7 +2,7 @@ from typing import SupportsInt, Callable, Union
 
 import pygame
 
-from .element import ResizableElement, ThemedElement, InteractiveElement
+from .element import ResizableElement, ThemedElement, InteractiveElement, BorderedElement
 from .label import Label
 from .. import constants
 from ..buttonup_types import FontLike, Callback, RGB
@@ -10,7 +10,7 @@ from ..theme import ThemeLike, load_default_theme
 from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function
 
 
-class TextInput(InteractiveElement, ResizableElement, ThemedElement):
+class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
@@ -33,12 +33,10 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         if border_radius is None:
             border_radius = constants.DEFAULT_TEXTINPUT_BORDER_RADIUS
 
-        self._border_radius = self._parse_border_radius(border_radius)
-
         if border_width is None:
             border_width = constants.DEFAULT_TEXTINPUT_BORDER_WIDTH
 
-        self._border_width = self._parse_border_width(border_width)
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
 
         if width is None:
             width = constants.DEFAULT_TEXTINPUT_WIDTH
@@ -180,20 +178,6 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement):
         if not isinstance(placeholder, str):
             raise TypeError(f"TextInput placeholder must be of type 'str', not '{type(placeholder)}'.")
         return placeholder
-
-    def _parse_border_radius(self, border_radius: SupportsInt) -> int:
-        if not isinstance(border_radius, int):
-            raise TypeError(f"TextInput border_radius must be of type 'int', not '{type(border_radius)}'.")
-        if border_radius < 0:
-            raise ValueError("TextInput border_radius cannot be negative.")
-        return border_radius
-
-    def _parse_border_width(self, border_width: SupportsInt) -> int:
-        if not isinstance(border_width, int):
-            raise TypeError(f"TextInput border_width must be of type 'int', not '{type(border_width)}'.")
-        if border_width < 0:
-            raise ValueError("TextInput border_width cannot be negative.")
-        return border_width
 
     def _move_cursor_from_click(self, mouse_x: int) -> None:
         relative_x = mouse_x - self._text_label.x

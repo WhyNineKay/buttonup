@@ -3,7 +3,7 @@ from typing import SupportsInt, Union, Optional
 
 import pygame
 
-from .element import InteractionState, InteractiveElement, ThemedElement
+from .element import InteractionState, InteractiveElement, ThemedElement, BorderedElement
 from .label import Label
 from .. import constants
 from ..buttonup_types import Callback, BoolCallback, FontLike, RGB
@@ -17,7 +17,7 @@ class CheckStyle(Enum):
     FILL = auto()
 
 
-class Checkbox(InteractiveElement, ThemedElement):
+class Checkbox(InteractiveElement, ThemedElement, BorderedElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
@@ -48,12 +48,10 @@ class Checkbox(InteractiveElement, ThemedElement):
         if border_radius is None:
             border_radius = constants.DEFAULT_CHECKBOX_BORDER_RADIUS
 
-        self._border_radius = self._parse_border_radius(border_radius)
-
         if border_width is None:
             border_width = constants.DEFAULT_CHECKBOX_BORDER_WIDTH
 
-        self._border_width = self._parse_border_width(border_width)
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
 
         if text is None:
             text = ""
@@ -125,12 +123,6 @@ class Checkbox(InteractiveElement, ThemedElement):
 
     def _parse_size(self, size: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(size, "size")
-
-    def _parse_border_radius(self, border_radius: SupportsInt) -> int:
-        return ParsingTools.parse_non_negative_int(border_radius, "border_radius")
-
-    def _parse_border_width(self, border_width: SupportsInt) -> int:
-        return ParsingTools.parse_non_negative_int(border_width, "border_width")
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
