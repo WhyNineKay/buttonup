@@ -192,11 +192,9 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         self._reset_cursor_timer()
 
     def _on_click(self) -> None:
-        # Focus the text input when clicked
-        if self._focused:
-            # If already focused, move cursor to click position
-            mouse_x, _ = pygame.mouse.get_pos()
-            self._move_cursor_from_click(mouse_x)
+        # Move the clicked position to the cursor
+        mouse_x, _ = pygame.mouse.get_pos()
+        self._move_cursor_from_click(mouse_x)
 
         self._focused = True
 
