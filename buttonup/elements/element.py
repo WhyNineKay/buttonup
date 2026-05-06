@@ -287,6 +287,8 @@ class InteractiveElement(SizedElement, Element):
                 if self._state != InteractionState.HOVERED:
                     self._state = InteractionState.HOVERED
                     self._on_hover_callback_package.call()
+                    if self._state == InteractionState.DISABLED:
+                        return
             else:
                 self._state = InteractionState.INACTIVE
 
@@ -302,11 +304,12 @@ class InteractiveElement(SizedElement, Element):
         if not current_pressed and self._previous_pressed:
             if is_mouse_over and self._started_click_on_element:
                 self._on_click_callback_package.call()
-                self._state = InteractionState.HOVERED
+                if self._state != InteractionState.DISABLED:
+                    self._state = InteractionState.HOVERED
             else:
-                self._state = InteractionState.INACTIVE
+                if self._state != InteractionState.DISABLED:
+                    self._state = InteractionState.INACTIVE
 
-            # Reset started flag after release
             self._started_click_on_element = False
 
         self._previous_pressed = current_pressed

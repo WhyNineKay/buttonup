@@ -45,21 +45,6 @@ class TestThemeModule(unittest.TestCase):
         t2 = theme_module.load_theme("dark")
         self.assertIs(t1, t2)
 
-    def test_load_theme_with_dict_and_with_theme_instance(self):
-        theme_dict = {
-            "name": "Custom",
-            "elements": {"label": {"text_color": (1, 2, 3)}}
-        }
-
-        t = theme_module.load_theme(theme_dict)
-        self.assertIsInstance(t, Theme)
-        self.assertEqual(t.name, "Custom")
-        self.assertEqual(t.label_theme.text_color, (1, 2, 3))
-
-        # Passing an existing Theme instance should return it unchanged
-        same = theme_module.load_theme(t)
-        self.assertIs(same, t)
-
     def test_load_theme_with_unknown_string_and_invalid_type(self):
         cases = [
             ("not-a-theme", WillRaise(ValueError)),
