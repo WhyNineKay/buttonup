@@ -32,6 +32,11 @@ class Alignment(Enum):
     BOTTOM_CENTER = auto()
     BOTTOM_RIGHT = auto()
 
+    def is_horizontal_aligned(self) -> bool:
+        return self in {Alignment.CENTER_LEFT, Alignment.CENTER, Alignment.CENTER_RIGHT}
+
+    def is_vertical_aligned(self) -> bool:
+        return self in {Alignment.TOP_CENTER, Alignment.CENTER, Alignment.BOTTOM_CENTER}
 
 @dataclass
 class CallbackPackage:
