@@ -2,7 +2,7 @@
 element.py
 """
 from pathlib import Path
-from typing import SupportsInt, Tuple, Union, Optional, List
+from typing import SupportsInt, Tuple, Union, Optional, List, Any
 
 import pygame
 
@@ -303,6 +303,27 @@ class InteractiveElement(SizedElement, Element):
                 self._state = InteractionState.INACTIVE
 
         self._previous_pressed = current_pressed
+
+    def _parse_interaction_state(self, value: Any) -> InteractionState:
+        if isinstance(value, InteractionState):
+            return value
+        else:
+            raise TypeError(f"Interaction state must be of type InteractionState, not '{type(value)}'.")
+
+    @property
+    def state(self) -> InteractionState:
+        return self._state
+
+    @state.setter
+    def state(self, value: Any) -> None:
+        self._state = self._parse_interaction_state(value)
+
+    def disable(self) -> None:
+        self._state = InteractionState.DISABLED
+
+    def enable(self) -> None:
+        if self._state == InteractionState.DISABLED:
+            self._state = InteractionState.INACTIVE
 
 
 class FontElement:

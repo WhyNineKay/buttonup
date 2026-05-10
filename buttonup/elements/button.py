@@ -63,12 +63,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
 
         ThemedElement.__init__(self, theme=theme)
 
-    def disable(self) -> None:
-        self._state = InteractionState.DISABLED
-
-    def enable(self) -> None:
-        self._state = InteractionState.INACTIVE
-
     def _update_colors(self) -> None:
         self._base_color = self.theme.button_theme.base_color
         self._base_color_pressed = self.theme.button_theme.base_color_pressed

@@ -53,19 +53,19 @@ class MainWindow:
         self.dt = 0.0
 
     def char_transform_function(self, char: str) -> str:
-        return char.lower()
+        return char.upper()
 
     def toggle_text_input(self, state: bool) -> None:
         if not state:
-            self.text_input._state = InteractionState.INACTIVE
+            self.text_input.enable()
         else:
-            self.text_input._state = InteractionState.DISABLED
+            self.text_input.disable()
 
     def toggle_checkbox(self) -> None:
-        if self.checkbox._state == InteractionState.DISABLED:
-            self.checkbox._state = InteractionState.INACTIVE
+        if self.checkbox.state == InteractionState.DISABLED:
+            self.checkbox.enable()
         else:
-            self.checkbox._state = InteractionState.DISABLED
+            self.checkbox.disable()
 
 
     def draw(self) -> None:
