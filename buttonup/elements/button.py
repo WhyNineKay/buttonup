@@ -2,18 +2,18 @@ from typing import SupportsInt, Union, Tuple, Dict
 
 import pygame
 
-from .element import ResizableElement, InteractiveElement, ThemedElement
+from .element import ResizableElement, InteractiveElement, ThemedElement, BorderedElement
 from .label import Label
 from .. import constants
 from ..buttonup_types import Callback, RGB, FontLike, ColorLike
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR
+from ..utils import CallbackPackage, TEMP_COLOR, ParsingTools
 from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
     apply_surface_border_radius, Colors
 from ..utils import InteractionState, Alignment
 
 
-class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
+class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedElement):
     """Base button class"""
 
     def __init__(self,
@@ -36,12 +36,10 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         if border_radius is None:
             border_radius = constants.DEFAULT_BUTTON_BORDER_RADIUS
 
-        self._border_radius = self._parse_border_radius(border_radius)
-
         if border_width is None:
             border_width = constants.DEFAULT_BUTTON_BORDER_WIDTH
 
-        self._border_width = self._parse_border_width(border_width)
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
 
         InteractiveElement.__init__(self, x=x, y=y, width=width, height=height, on_click=on_click, on_hover=on_hover)
 
@@ -73,30 +71,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         self._border_color_hovered = self.theme.button_theme.border_color_hovered
         self._border_color_disabled = self.theme.button_theme.border_color_disabled
 
-    def _parse_border_radius(self, border_radius: SupportsInt) -> int:
-        if not hasattr(border_radius, "__int__"):
-            raise TypeError(
-                f"Border radius must be of type 'int' or support __int__ conversion, not '{type(border_radius)}'.")
-
-        border_radius = int(border_radius)
-
-        if border_radius < 0:
-            raise ValueError(f"Border radius must be non-negative, not '{border_radius}'.")
-
-        return border_radius
-
-    def _parse_border_width(self, border_width: SupportsInt) -> int:
-        if not hasattr(border_width, "__int__"):
-            raise TypeError(
-                f"Border width must be of type 'int' or support __int__ conversion, not '{type(border_width)}'.")
-
-        border_width = int(border_width)
-
-        if border_width < 0:
-            raise ValueError(f"Border width must be non-negative, not '{border_width}'.")
-
-        return border_width
-
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)
 
@@ -123,9 +97,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         # Draw border
         pygame.draw.rect(surface, state_border_color, self.rect, width=self._border_width,
                          border_radius=self._border_radius)
-
-    def _update_border_radius(self, border_radius: int) -> None:
-        self._border_radius = border_radius
 
     @property
     def base_color(self) -> RGB:
@@ -215,22 +186,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement):
         else:
             raise ValueError(f"Color 'border_color_disabled' must be a valid color, not '{value}'.")
 
-    @property
-    def border_radius(self) -> int:
-        return self._border_radius
-
-    @border_radius.setter
-    def border_radius(self, value: SupportsInt) -> None:
-        border_radius = self._parse_border_radius(value)
-        self._update_border_radius(border_radius)
-
-    @property
-    def border_width(self) -> int:
-        return self._border_width
-
-    @border_width.setter
-    def border_width(self, value: SupportsInt) -> None:
-        self._border_width = self._parse_border_width(value)
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (255, 0, 0), self.rect, width=1)
@@ -292,16 +247,7 @@ class TextButton(BaseButton):
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
-        if not hasattr(text_padding, "__int__"):
-            raise TypeError(
-                f"Text padding must be of type 'int' or support __int__ conversion, not '{type(text_padding)}'.")
-
-        text_padding = int(text_padding)
-
-        if text_padding < 0:
-            raise ValueError(f"Text padding must be non-negative, not '{text_padding}'.")
-
-        return text_padding
+        return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
 
     def _parse_text_alignment(self, text_alignment: Alignment) -> Alignment:
         if not isinstance(text_alignment, Alignment):
@@ -535,30 +481,16 @@ class ImageButton(BaseButton):
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
     def _parse_padding(self, padding: SupportsInt) -> int:
-        if not hasattr(padding, "__int__"):
-            raise TypeError(f"Padding must be of type 'int' or support __int__ conversion, not '{type(padding)}'.")
-
-        padding = int(padding)
-
-        if padding < 0:
-            raise ValueError(f"Padding must be non-negative, not '{padding}'.")
-
-        return padding
+        return ParsingTools.parse_non_negative_int(padding, "padding")
 
     def _parse_preserve_aspect_ratio(self, preserve_aspect_ratio: bool) -> bool:
-        if not isinstance(preserve_aspect_ratio, bool):
-            raise TypeError(f"Preserve aspect ratio flag must be of type 'bool', not '{type(preserve_aspect_ratio)}'.")
-        return preserve_aspect_ratio
+        return ParsingTools.parse_bool_strict(preserve_aspect_ratio, "preserve_aspect_ratio")
 
     def _parse_image_size_dominant(self, image_size_dominant: bool) -> bool:
-        if not isinstance(image_size_dominant, bool):
-            raise TypeError(f"Image size dominant flag must be of type 'bool', not '{type(image_size_dominant)}'.")
-        return image_size_dominant
+        return ParsingTools.parse_bool_strict(image_size_dominant, "image_size_dominant")
 
     def _parse_state_changing_images(self, state_changing_images: bool) -> bool:
-        if not isinstance(state_changing_images, bool):
-            raise TypeError(f"State changing images flag must be of type 'bool', not '{type(state_changing_images)}'.")
-        return state_changing_images
+        return ParsingTools.parse_bool_strict(state_changing_images, "state_changing_images")
 
     def _generate_hovered_image(self) -> pygame.Surface:
         hovered_image = self._image.copy()
@@ -759,9 +691,7 @@ class SpriteButton(BaseButton):
                             on_hover=on_hover, border_radius=0, border_width=0)
 
     def _parse_preserve_aspect_ratio(self, preserve_aspect_ratio: bool) -> bool:
-        if not isinstance(preserve_aspect_ratio, bool):
-            raise TypeError(f"Preserve aspect ratio flag must be of type 'bool', not '{type(preserve_aspect_ratio)}'.")
-        return preserve_aspect_ratio
+        return ParsingTools.parse_bool_strict(preserve_aspect_ratio, "preserve_aspect_ratio")
 
     def _resize_sprite_sheet(self) -> None:
         if self._preserve_aspect_ratio:

@@ -43,18 +43,28 @@ class MainWindow:
             sprite_sheet=sprite_sheet, width=500, height=500, preserve_aspect_ratio=True
         )
 
+        self.button_2 = buttonup.TextButton(
+            x=50, y=350, theme=self.theme, text="Disabled Button", on_click=self.disable_button_2
+        )
+
         self.dt = 0.0
         self.timer = 0.0
+
+    def disable_button_2(self) -> None:
+        print("Button should be disabled!")
+        self.button_2.disable()
 
     def draw(self) -> None:
         self.window.fill(self.theme.color.background)
         self.button.draw(self.window)
+        self.button_2.draw(self.window)
         self.image_button.draw(self.window)
         self.sprite_button.draw(self.window)
         pygame.display.flip()
 
     def update(self) -> None:
         self.button.update(self.dt)
+        self.button_2.update(self.dt)
         self.image_button.update(self.dt)
         self.sprite_button.update(self.dt)
 
