@@ -25,7 +25,7 @@ class MainWindow:
         theme = buttonup.theme.load_theme("dark")
 
         self.label = buttonup.Label(
-            x=50, y=100, text="Hello, World!", theme=theme, font_size=100
+            x=50, y=100, text="Hello,\nWorld!", theme=theme, font_size=100
         )
         self.label.centerx = WINDOW_WIDTH / 2
         self.label.centery = WINDOW_HEIGHT / 2
@@ -46,6 +46,8 @@ class MainWindow:
             "48192850178273428",
             "Code is just magic!"
         ]
+        for i in range(len(self.text_targets)):
+            self.text_targets[i] = self.text_targets[i].replace(" ", "\n")
 
         self.fonts = [  # monospaced
             "consolas",
