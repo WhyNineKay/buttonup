@@ -19,7 +19,7 @@ class MainWindow:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.theme = buttonup.theme.load_theme("dark")
+        self.theme = buttonup.theme.load_theme("night")
 
         self.label1 = buttonup.Label(
             x=0, y=0, text="This is a label!", theme=self.theme

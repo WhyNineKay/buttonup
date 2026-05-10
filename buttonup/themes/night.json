@@ -1,0 +1,73 @@
+{
+  "name": "Night",
+  "colors": {
+    "background": "#020F13",
+    "surface": "#041E26",
+    "primary": "#009FB7",
+    "secondary": "#DE3C4B",
+    "text_surface": "#FFFFFF",
+    "text_background": "#F2F4F3"
+  },
+  "elements": {
+    "label": {
+      "text_color": "#FFFFFF"
+    },
+    "button": {
+      "base_color": "#041E26",
+      "base_color_pressed": "#041D25",
+      "base_color_hovered": "#052733",
+      "base_color_disabled": "#041920",
+      "border_color": "#062B37",
+      "border_color_pressed": "#062732",
+      "border_color_hovered": "#083949",
+      "border_color_disabled": "#062732",
+      "text_color": "#F2F4F3",
+      "text_color_pressed": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E"
+    },
+    "checkbox": {
+      "base_color": "#041E26",
+      "base_color_pressed": "#041D25",
+      "base_color_hovered": "#052733",
+      "base_color_disabled": "#041920",
+      "base_color_checked": "#041E26",
+      "border_color": "#062B37",
+      "border_color_pressed": "#009FB7",
+      "border_color_hovered": "#083949",
+      "border_color_disabled": "#34383B",
+      "border_color_checked": "#009FB7",
+      "text_color": "#E2E2E2",
+      "text_color_pressed": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E",
+      "text_color_checked": "#F0F0F0",
+      "check_color": "#FFFFFF",
+      "check_color_pressed": "#BDBDBD",
+      "check_color_hovered": "#FFFFFF",
+      "check_color_disabled": "#7A7A7A",
+      "check_color_checked": "#FFFFFF"
+    },
+    "text_input": {
+      "base_color": "#041E26",
+      "base_color_focused": "#052733",
+      "base_color_hovered": "#052733",
+      "base_color_disabled": "#041920",
+      "border_color": "#062B37",
+      "border_color_focused": "#009FB7",
+      "border_color_hovered": "#083949",
+      "border_color_disabled": "#062732",
+      "text_color": "#F2F4F3",
+      "text_color_focused": "#FFFFFF",
+      "text_color_hovered": "#F2F4F3",
+      "text_color_disabled": "#8E8E8E",
+      "placeholder_color": "#3C7182",
+      "caret_color": "#FFFFFF"
+    },
+    "container": {
+      "base_color": "#041920",
+      "border_color": "#062732",
+      "text_color": "#E2E2E2"
+    }
+  }
+}
