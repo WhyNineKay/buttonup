@@ -1,5 +1,9 @@
-import buttonup
+import random
 import pygame
+import buttonup
+from buttonup.buttonup_types import RGB
+from buttonup.elements.element import SizedElement, Element
+from buttonup.elements.container import PerpendicularOverflowBehaviour
 
 pygame.init()
 
@@ -12,6 +16,15 @@ WINDOW_FPS = 60
 pygame.font.init()
 
 
+class Rectangle(SizedElement, Element):
+    def __init__(self, x: int, y: int, width: int, height: int, color: RGB) -> None:
+        super().__init__(x, y, width, height)
+        self.color = color
+
+    def draw(self, surface: pygame.Surface) -> None:
+        pygame.draw.rect(surface, self.color, self.rect)
+
+
 class MainWindow:
     def __init__(self) -> None:
         self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -20,44 +33,27 @@ class MainWindow:
 
         self.theme = buttonup.theme.load_theme("dark")
 
-        self._container_box = buttonup.Grid(
-            x=50, y=50, width=370, height=370, padding=10, spacing=10, columns=4
+        self._container_box = buttonup.VBox(
+            x=50, y=50, width=200, height=370, padding=10, spacing=10, overflow_behavior=PerpendicularOverflowBehaviour.FIXED
         )
 
-        button_names = [
-            "C", "±", "%", "÷",
-            "7", "8", "9", "×",
-            "4", "5", "6", "−",
-            "1", "2", "3", "+",
-            "0", ".", "="
-        ]
-
-
-
-        for name in button_names:
-            width = 70 if name != "=" else 160
-            button = buttonup.TextButton(
-                x=0, y=0, width=width, height=70, text=name,
-                theme=self.theme,
-                on_click=lambda n=name: print(f"Clicked {n}!")
-            )
-
-            if name in {"C", "±", "%", "÷", "×", "−", "+", "="}:
-                button.border_color = self.theme.color.secondary
-                button.border_color_hovered = self.theme.color.primary
-                button.border_color_pressed = self.theme.color.primary
-
-            self._container_box.add(button)
+        self.generate_elements()
 
         self._container_box.apply()
 
         self.dt = 0.0
 
+    def generate_elements(self) -> None:
+        for i in range(10):
+            rectangle = Rectangle(x=0, y=0, width=random.choice([50, 150]), height=random.choice([50, 100, 150]),
+                                  color=(255, 255, 0))
+            self._container_box.add(rectangle)
+
     def draw(self) -> None:
         self.window.fill(self.theme.color.background)
 
         self._container_box.draw(self.window)
-        # self._container_box.debug_draw(self.window)
+        self._container_box.debug_draw(self.window)
 
         pygame.display.flip()
 

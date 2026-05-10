@@ -515,13 +515,17 @@ class ContainerElement(Element, ResizableElement):
 
         pygame.draw.rect(surface, (255, 0, 0), self._rect, 1)
 
-    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+    def _update_position(self, x: SupportsInt, y: SupportsInt, apply: bool = True) -> None:
         ResizableElement._update_position(self, x, y)
-        self.apply()
 
-    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        if apply:
+            self.apply()
+
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt, apply: bool = True) -> None:
         ResizableElement._update_dimensions(self, width, height)
-        self.apply()
+
+        if apply:
+            self.apply()
 
     @property
     def elements(self) -> List[SizedElement]:

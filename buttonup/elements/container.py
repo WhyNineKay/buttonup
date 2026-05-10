@@ -15,6 +15,11 @@ class GridFillOrder(Enum):
     COLUMN_MAJOR = auto()
 
 
+class PerpendicularOverflowBehaviour(Enum):
+    EXPAND = auto()
+    FIXED = auto()
+
+
 class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
     def __init__(self,
                  x: SupportsInt,
@@ -134,6 +139,7 @@ class VBox(ContainerElement):
                  enforce_layout_cleanliness: bool = None,
                  padding: SupportsInt = None,
                  spacing: SupportsInt = None,
+                 overflow_behavior: PerpendicularOverflowBehaviour = None,
                  ) -> None:
         super().__init__(x, y, width, height, elements, enforce_layout_cleanliness)
 
@@ -146,12 +152,24 @@ class VBox(ContainerElement):
         self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
         self._spacing = ParsingTools.parse_non_negative_int(spacing, "spacing")
 
+        if overflow_behavior is None:
+            overflow_behavior = PerpendicularOverflowBehaviour.FIXED
+
+        self._overflow_behavior = self._parse_overflow_behavior(overflow_behavior)
+
+    def _parse_overflow_behavior(self, overflow_behavior: PerpendicularOverflowBehaviour) -> PerpendicularOverflowBehaviour:
+        if not isinstance(overflow_behavior, PerpendicularOverflowBehaviour):
+            raise TypeError(f"overflow_behavior must be of type 'OverflowBehavior', not '{type(overflow_behavior)}'.")
+
+        return overflow_behavior
+
     def apply(self) -> None:
         super().apply()
 
         if len(self._elements) == 0:
             return
 
+        total_width = 0
         current_column_width = 0
         current_x = self._x + self._padding
         current_y = self._y + self._padding
@@ -162,6 +180,8 @@ class VBox(ContainerElement):
                 # Move to next column.
                 current_x += current_column_width + self._spacing
                 current_y = self._y + self._padding
+                total_width += current_column_width + self._spacing
+
                 current_column_width = 0
 
             element.pos = (current_x, current_y)
@@ -169,6 +189,14 @@ class VBox(ContainerElement):
             current_y += element.height + self._spacing
 
             current_column_width = max(current_column_width, element.width)
+
+        total_width += current_column_width + self._padding * 2
+
+        if total_width == self._width:
+            return
+
+        if self._overflow_behavior == PerpendicularOverflowBehaviour.EXPAND:
+            self._update_dimensions(total_width, self._height, apply=False)
 
 
 class HBox(ContainerElement):
@@ -181,6 +209,7 @@ class HBox(ContainerElement):
                  enforce_layout_cleanliness: bool = None,
                  padding: SupportsInt = None,
                  spacing: SupportsInt = None,
+                 overflow_behavior: PerpendicularOverflowBehaviour = None,
                  ) -> None:
         super().__init__(x, y, width, height, elements, enforce_layout_cleanliness)
 
@@ -193,12 +222,24 @@ class HBox(ContainerElement):
         self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
         self._spacing = ParsingTools.parse_non_negative_int(spacing, "spacing")
 
+        if overflow_behavior is None:
+            overflow_behavior = PerpendicularOverflowBehaviour.FIXED
+
+        self._overflow_behavior = self._parse_overflow_behavior(overflow_behavior)
+
+    def _parse_overflow_behavior(self, overflow_behavior: PerpendicularOverflowBehaviour) -> PerpendicularOverflowBehaviour:
+        if not isinstance(overflow_behavior, PerpendicularOverflowBehaviour):
+            raise TypeError(f"overflow_behavior must be of type 'OverflowBehavior', not '{type(overflow_behavior)}'.")
+
+        return overflow_behavior
+
     def apply(self) -> None:
         super().apply()
 
         if len(self._elements) == 0:
             return
 
+        total_height = 0
         current_row_height = 0
         current_x = self._x + self._padding
         current_y = self._y + self._padding
@@ -209,6 +250,8 @@ class HBox(ContainerElement):
                 # Move to next row.
                 current_y += current_row_height + self._spacing
                 current_x = self._x + self._padding
+                total_height += current_row_height + self._spacing
+
                 current_row_height = 0
 
             element.pos = (current_x, current_y)
@@ -216,6 +259,14 @@ class HBox(ContainerElement):
             current_x += element.width + self._spacing
 
             current_row_height = max(current_row_height, element.height)
+
+        total_height += current_row_height + self._padding * 2
+
+        if total_height == self._height:
+            return
+
+        if self._overflow_behavior == PerpendicularOverflowBehaviour.EXPAND:
+            self._update_dimensions(self._width, total_height, apply=False)
 
 
 class Grid(ContainerElement):
