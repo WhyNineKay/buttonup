@@ -19,7 +19,7 @@ class MainWindow:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.theme = buttonup.theme.load_theme("night")
+        self.theme = buttonup.theme.load_theme("dark")
 
         self.label1 = buttonup.Label(
             x=0, y=0, text="This is a label!", theme=self.theme
@@ -42,12 +42,15 @@ class MainWindow:
         self.panel = buttonup.Panel(x=0, y=0, width=200, height=200, theme=self.theme)
         self.panel.element = self.checkbox
 
+        self.switch = buttonup.Switch(x=0, y=0, theme=self.theme, text="Toggle me!")
+
         self.vbox = buttonup.VBox(x=50, y=200, width=600, height=600)
         self.vbox.add(self.label1)
         self.vbox.add(self.button1)
         self.vbox.add(self.button2)
         self.vbox.add(self.panel)
         self.vbox.add(self.text_input)
+        self.vbox.add(self.switch)
         self.vbox.apply()
 
         self.dt = 0.0

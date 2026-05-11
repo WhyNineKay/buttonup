@@ -154,6 +154,27 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
 
         self._update_dimensions(self._width, self._height)
 
+
+    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        super()._update_position(x, y)
+
+        self._track_rect.topleft = (self._x, self._y)
+
+        self._knob_pos_on = (
+            self._x + self._track_width - self._knob_rect.width - self._knob_padding,
+            self._y + self._knob_padding
+        )
+        self._knob_pos_off = (self._x + self._knob_padding, self._y + self._knob_padding)
+
+        if self._switched:
+            self._knob_rect.topleft = self._knob_pos_on
+        else:
+            self._knob_rect.topleft = self._knob_pos_off
+
+        # Update label position
+        self._switch_label.x = self._x + self._track_width + self._text_padding
+        self._switch_label.y = self._y + (self._height - self._switch_label.height) // 2
+
     def _update_dimensions(self, width: int, height: int) -> None:
         super()._update_dimensions(width, height)
 
