@@ -68,6 +68,28 @@
       "base_color": "#041920",
       "border_color": "#062732",
       "text_color": "#E2E2E2"
+    },
+    "switch": {
+      "base_color": "#041E26",
+      "base_color_pressed": "#041D25",
+      "base_color_hovered": "#052733",
+      "base_color_disabled": "#041920",
+      "base_color_dragging": "#041E26",
+      "border_color": "#062B37",
+      "border_color_pressed": "#009FB7",
+      "border_color_hovered": "#083949",
+      "border_color_disabled": "#34383B",
+      "border_color_dragging": "#009FB7",
+      "text_color": "#E2E2E2",
+      "text_color_pressed": "#D6D6D6",
+      "text_color_hovered": "#F0F0F0",
+      "text_color_disabled": "#8E8E8E",
+      "text_color_dragging": "#F0F0F0",
+      "knob_color": "#FFFFFF",
+      "knob_color_pressed": "#BDBDBD",
+      "knob_color_hovered": "#FFFFFF",
+      "knob_color_disabled": "#7A7A7A",
+      "knob_color_dragging": "#FFFFFF"
     }
   }
 }
