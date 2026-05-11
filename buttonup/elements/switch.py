@@ -200,10 +200,15 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
 
         previous_switched = self._switched
 
-        if click_x < self._x + self._track_width / 2:
-            self._switched = False
+        if self._track_rect.x <= click_x <= self._track_rect.x + self._track_rect.width:
+            # Click inside of rail.
+            if click_x < self._x + self._track_width / 2:
+                self._switched = False
+            else:
+                self._switched = True
         else:
-            self._switched = True
+            # Click outside of rail, simply just toggle the state.
+            self._switched = not self._switched
 
         # On click first
         self._user_on_click_callback_package.call()
