@@ -678,9 +678,12 @@ class SpriteButton(BaseButton):
                 sprite_sheet_inactive_image.get_width() / sprite_sheet_inactive_image.get_height()
         )
 
-        self._sprite_sheet = {
-            state: self._original_sprite_sheet[state].copy() for state in InteractionState
-        }
+        self._sprite_sheet = {}
+        for state in InteractionState:
+            if state == InteractionState.DRAGGING:
+                continue  # Dragging state is not required for sprite sheet
+
+            self._sprite_sheet[state] = self._original_sprite_sheet[state].copy()
 
         if preserve_aspect_ratio is None:
             preserve_aspect_ratio = True
@@ -724,6 +727,9 @@ class SpriteButton(BaseButton):
         size = None
 
         for state in InteractionState:
+            if state == InteractionState.DRAGGING:
+                continue  # Dragging state is not required for sprite sheet
+
             if state not in sprite_sheet:
                 raise ValueError(f"Sprite sheet is missing image for state '{state}'.")
 
