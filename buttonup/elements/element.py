@@ -41,9 +41,9 @@ class PositionalElement:
         """
         self._x = 0
         self._y = 0
-        self._update_position(x, y)
+        self._init_position(x, y)
 
-    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+    def _init_position(self, x: SupportsInt, y: SupportsInt) -> None:
         if hasattr(x, "__int__"):
             self._x = int(x)
         else:
@@ -53,6 +53,9 @@ class PositionalElement:
             self._y = int(y)
         else:
             raise TypeError(f"Value 'y' must be of type int, or support __int__ conversion.")
+
+    def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        self._init_position(x, y)
 
     @property
     def x(self) -> int:
@@ -89,6 +92,7 @@ class PositionalElement:
     def vec(self, value: pygame.Vector2) -> None:
         if not isinstance(value, pygame.Vector2):
             raise TypeError(f"Value 'vec' must be a tuple of length 2.")
+
         self._update_position(value[0], value[1])
 
 
@@ -106,9 +110,9 @@ class SizedElement(PositionalElement):
 
         self._width = 0
         self._height = 0
-        self._update_dimensions(width, height)
+        self._init_dimensions(width, height)
 
-    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+    def _init_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         if not hasattr(width, "__int__"):
             raise TypeError(f"Value 'width' must be of type int, or support __int__ conversion.")
         if not hasattr(height, "__int__"):
@@ -124,8 +128,16 @@ class SizedElement(PositionalElement):
 
         self._rect.size = (self._width, self._height)
 
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        self._init_dimensions(width, height)
+
+    def _init_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        super()._init_position(x, y)
+        self._rect.x = self._x
+        self._rect.y = self._y
+
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
-        PositionalElement._update_position(self, x, y)
+        super()._update_position(x, y)
         self._rect.x = self._x
         self._rect.y = self._y
 
@@ -350,8 +362,7 @@ class DraggableElement(InteractiveElement):
                  on_drag_end: Union[CallbackPackage, Callback] = None,
                  drag_threshold: SupportsInt = None
                  ) -> None:
-        InteractiveElement.__init__(self, x=x, y=y, width=width, height=height,
-                                    on_click=on_click, on_hover=on_hover)
+        InteractiveElement.__init__(self, x=x, y=y, width=width, height=height, on_click=on_click, on_hover=on_hover)
 
         self._on_drag_start_callback_package: CallbackPackage = self._parse_named_callback(on_drag_start, "on_drag_start")
         self._on_drag_callback_package: CallbackPackage = self._parse_named_callback(on_drag, "on_drag")
@@ -622,18 +633,19 @@ class ContainerElement(Element, ResizableElement):
                  elements: List[SizedElement] = None,
                  enforce_layout_cleanliness: bool = None
                  ) -> None:
+        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
+
         if elements is None:
             elements = []
 
         self._elements = self._parse_elements(elements)
 
-        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
-
         if enforce_layout_cleanliness is None:
             self._enforce_layout_cleanliness = True
         else:
-            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(enforce_layout_cleanliness,
-                                                                              "enforce_layout_cleanliness")
+            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(
+                enforce_layout_cleanliness, "enforce_layout_cleanliness"
+            )
 
         self._layout_dirty = True
 
