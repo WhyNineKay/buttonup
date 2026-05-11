@@ -1,6 +1,7 @@
 """
 element.py
 """
+import math
 from pathlib import Path
 from typing import SupportsInt, Tuple, Union, Optional, List, Any
 
@@ -9,7 +10,7 @@ import pygame
 from ..buttonup_types import Callback, FontLike
 from ..theme import Theme, ThemeLike, load_theme
 from ..utils import CallbackPackage, InteractionState, ParsingTools
-
+from .. import constants
 
 class Element:
     """Base element class for all drawable elements."""
@@ -334,6 +335,196 @@ class InteractiveElement(SizedElement, Element):
     def enable(self) -> None:
         if self._state == InteractionState.DISABLED:
             self._state = InteractionState.INACTIVE
+
+
+class DraggableElement(InteractiveElement):
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 on_click: Union[CallbackPackage, Callback] = None,
+                 on_hover: Union[CallbackPackage, Callback] = None,
+                 on_drag_start: Union[CallbackPackage, Callback] = None,
+                 on_drag: Union[CallbackPackage, Callback] = None,
+                 on_drag_end: Union[CallbackPackage, Callback] = None,
+                 drag_threshold: SupportsInt = None
+                 ) -> None:
+        InteractiveElement.__init__(self, x=x, y=y, width=width, height=height,
+                                    on_click=on_click, on_hover=on_hover)
+
+        self._on_drag_start_callback_package: CallbackPackage = self._parse_named_callback(on_drag_start, "on_drag_start")
+        self._on_drag_callback_package: CallbackPackage = self._parse_named_callback(on_drag, "on_drag")
+        self._on_drag_end_callback_package: CallbackPackage = self._parse_named_callback(on_drag_end, "on_drag_end")
+
+
+        if drag_threshold is None:
+            drag_threshold = constants.DEFAULT_DRAG_THRESHOLD
+
+        self._drag_threshold = self._parse_drag_threshold(drag_threshold)
+
+        # Set once when the drag threshold is crossed; persists until next drag begins.
+        self._drag_start_pos: Optional[tuple[int, int]] = None
+
+        # Set on mouse release after a drag; persists until next drag begins.
+        self._drag_end_pos: Optional[tuple[int, int]] = None
+
+        # Delta from the previous frame's mouse position. Zero when not dragging.
+        self._drag_delta: tuple[int, int] = (0, 0)
+
+        # Total displacement from drag_start_pos to the current mouse position.
+        self._drag_total_delta: tuple[int, int] = (0, 0)
+
+        # Internal tracking.
+        self._press_origin: Optional[tuple[int, int]] = None  # Where the mouse first went down.
+        self._previous_mouse_pos: Optional[tuple[int, int]] = None
+        self._is_dragging: bool = False
+
+    def _parse_drag_threshold(self, value: Any) -> int:
+        return ParsingTools.parse_non_negative_int(value, "drag_threshold")
+
+    @property
+    def drag_start_pos(self) -> Optional[tuple[int, int]]:
+        """Mouse position where the drag was confirmed (threshold crossed).
+        Persists until the next drag begins. None before any drag has occurred."""
+        return self._drag_start_pos
+
+    @property
+    def drag_end_pos(self) -> Optional[tuple[int, int]]:
+        """Mouse position when the last drag ended.
+        Persists until the next drag begins. None before any drag has completed."""
+        return self._drag_end_pos
+
+    @property
+    def drag_delta(self) -> tuple[int, int]:
+        """Per-frame mouse delta while dragging. (0, 0) when not dragging."""
+        return self._drag_delta
+
+    @property
+    def drag_total_delta(self) -> tuple[int, int]:
+        """Total displacement from drag_start_pos to the current mouse position.
+        (0, 0) when not dragging."""
+        return self._drag_total_delta
+
+    @property
+    def is_dragging(self) -> bool:
+        return self._is_dragging
+
+    def update(self, dt: float) -> None:
+        if self._state == InteractionState.DISABLED:
+            self._drag_delta = (0, 0)
+            self._drag_total_delta = (0, 0)
+            return
+
+        mouse_pos = pygame.mouse.get_pos()
+        is_mouse_over = self._rect.collidepoint(mouse_pos)
+        current_pressed = pygame.mouse.get_pressed()[0]
+
+        # Mouse button JUST PRESSED
+        if current_pressed and not self._previous_pressed:
+            if is_mouse_over:
+                self._state = InteractionState.PRESSED
+                self._started_click_on_element = True
+                self._press_origin = mouse_pos
+                self._previous_mouse_pos = mouse_pos
+
+            else:
+                self._started_click_on_element = False
+                self._press_origin = None
+
+        # Mouse button HELD DOWN
+        elif current_pressed and self._previous_pressed:
+            if self._started_click_on_element and self._press_origin is not None:
+                if self._is_dragging:
+                    # Already dragging - update deltas and fire on_drag.
+                    prev = self._previous_mouse_pos or mouse_pos
+
+                    self._drag_delta = (mouse_pos[0] - prev[0], mouse_pos[1] - prev[1])
+
+                    self._drag_total_delta = (
+                        mouse_pos[0] - self._drag_start_pos[0],
+                        mouse_pos[1] - self._drag_start_pos[1],
+                    )
+
+                    self._previous_mouse_pos = mouse_pos
+                    self._on_drag_callback_package.call()
+
+                    if self._state == InteractionState.DISABLED:
+                        return
+
+                else:
+                    # Not yet dragging - check whether threshold is crossed.
+                    dx = mouse_pos[0] - self._press_origin[0]
+                    dy = mouse_pos[1] - self._press_origin[1]
+
+                    distance = math.sqrt(dx * dx + dy * dy)
+
+                    if distance >= self._drag_threshold:
+                        self._is_dragging = True
+
+                        self._drag_start_pos = mouse_pos
+                        self._drag_end_pos = None
+                        self._drag_delta = (dx, dy)
+                        self._drag_total_delta = (dx, dy)
+                        self._previous_mouse_pos = mouse_pos
+
+                        self._state = InteractionState.DRAGGING
+                        self._on_drag_start_callback_package.call()
+
+                        if self._state == InteractionState.DISABLED:
+                            return
+
+        # Mouse button JUST RELEASED
+        elif not current_pressed and self._previous_pressed:
+            if self._is_dragging:
+                # End the drag and suppress click.
+                self._drag_end_pos = mouse_pos
+
+                self._drag_delta = (0, 0)
+                self._drag_total_delta = (0, 0)
+                self._is_dragging = False
+                self._press_origin = None
+                self._previous_mouse_pos = None
+
+                self._state = InteractionState.HOVERED if is_mouse_over else InteractionState.INACTIVE
+
+                self._on_drag_end_callback_package.call()
+
+                if self._state == InteractionState.DISABLED:
+                    return
+
+            else:
+                # Normal click release (no drag occurred).
+                self._drag_delta = (0, 0)
+
+                if is_mouse_over and self._started_click_on_element:
+                    self._on_click_callback_package.call()
+                    if self._state != InteractionState.DISABLED:
+                        self._state = InteractionState.HOVERED
+                else:
+                    if self._state != InteractionState.DISABLED:
+                        self._state = InteractionState.INACTIVE
+
+                self._started_click_on_element = False
+                self._press_origin = None
+                self._previous_mouse_pos = None
+
+        # mouse button inactive
+        else:
+            self._drag_delta = (0, 0)
+
+            if not self._is_dragging:
+                # Hover logic (mirrors InteractiveElement exactly).
+                if is_mouse_over:
+                    if self._state != InteractionState.HOVERED:
+                        self._state = InteractionState.HOVERED
+                        self._on_hover_callback_package.call()
+                        if self._state == InteractionState.DISABLED:
+                            return
+                else:
+                    self._state = InteractionState.INACTIVE
+
+        self._previous_pressed = current_pressed
 
 
 class FontElement:

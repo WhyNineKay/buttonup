@@ -16,6 +16,7 @@ class InteractionState(Enum):
     HOVERED = auto()
     PRESSED = auto()
     DISABLED = auto()
+    DRAGGING = auto()
 
 
 TEMP_COLOR = (0, 0, 0)
