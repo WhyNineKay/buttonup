@@ -73,7 +73,7 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
 
         ThemedElement.__init__(self, theme=theme)
 
-        self._checkbox_theme = self.theme.checkbox_theme  # TODO: Update to _switch_theme
+        self._switch_theme = self.theme.switch_theme
 
         # ----- Border
 
@@ -225,56 +225,56 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
         return center_x >= track_center_x
 
     def _update_colors(self) -> None:
-        self._checkbox_theme = self.theme.checkbox_theme
+        self._switch_theme = self.theme.checkbox_theme
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
 
     def _get_base_color(self) -> RGB:
         if self._state == InteractionState.DISABLED:
-            return self._checkbox_theme.base_color_disabled
+            return self._switch_theme.base_color_disabled
         elif self._state == InteractionState.PRESSED:
-            return self._checkbox_theme.base_color_pressed
+            return self._switch_theme.base_color_pressed
         elif self._state == InteractionState.HOVERED:
-            return self._checkbox_theme.base_color_hovered
+            return self._switch_theme.base_color_hovered
         elif self._state == InteractionState.DRAGGING:
-            return self._checkbox_theme.base_color_pressed
+            return self._switch_theme.base_color_pressed
         else:
-            return self._checkbox_theme.base_color
+            return self._switch_theme.base_color
 
     def _get_border_color(self) -> RGB:
         if self._state == InteractionState.DISABLED:
-            return self._checkbox_theme.border_color_disabled
+            return self._switch_theme.border_color_disabled
         elif self._state == InteractionState.PRESSED:
-            return self._checkbox_theme.border_color_pressed
+            return self._switch_theme.border_color_pressed
         elif self._state == InteractionState.HOVERED:
-            return self._checkbox_theme.border_color_hovered
+            return self._switch_theme.border_color_hovered
         elif self._state == InteractionState.DRAGGING:
-            return self._checkbox_theme.border_color_pressed
+            return self._switch_theme.border_color_pressed
         else:
-            return self._checkbox_theme.border_color
+            return self._switch_theme.border_color
 
     def _get_check_color(self) -> RGB:
         if self._state == InteractionState.DISABLED:
-            return self._checkbox_theme.check_color_disabled
+            return self._switch_theme.knob_color_disabled
         elif self._state == InteractionState.PRESSED:
-            return self._checkbox_theme.check_color_pressed
+            return self._switch_theme.knob_color_pressed
         elif self._state == InteractionState.HOVERED:
-            return self._checkbox_theme.check_color_hovered
+            return self._switch_theme.knob_color_hovered
         elif self._state == InteractionState.DRAGGING:
-            return self._checkbox_theme.check_color_pressed
+            return self._switch_theme.knob_color_pressed
         else:
-            return self._checkbox_theme.check_color
+            return self._switch_theme.knob_color
 
     def _get_text_color(self) -> RGB:
         if self._state == InteractionState.DISABLED:
-            return self._checkbox_theme.text_color_disabled
+            return self._switch_theme.text_color_disabled
         elif self._state == InteractionState.PRESSED:
-            return self._checkbox_theme.text_color_pressed
+            return self._switch_theme.text_color_pressed
         elif self._state == InteractionState.HOVERED:
-            return self._checkbox_theme.text_color_hovered
+            return self._switch_theme.text_color_hovered
         else:
-            return self._checkbox_theme.text_color
+            return self._switch_theme.text_color
 
     def draw(self, surface: pygame.Surface) -> None:
         base_color = self._get_base_color()

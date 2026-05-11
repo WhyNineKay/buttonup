@@ -119,6 +119,32 @@ class ContainerTheme:
         return copy.copy(self)
 
 
+@dataclass
+class SwitchTheme:
+    base_color: RGB
+    base_color_pressed: RGB
+    base_color_hovered: RGB
+    base_color_disabled: RGB
+    base_color_dragging: RGB
+    border_color: RGB
+    border_color_pressed: RGB
+    border_color_hovered: RGB
+    border_color_disabled: RGB
+    border_color_dragging: RGB
+    text_color: RGB
+    text_color_pressed: RGB
+    text_color_hovered: RGB
+    text_color_disabled: RGB
+    text_color_dragging: RGB
+    knob_color: RGB
+    knob_color_pressed: RGB
+    knob_color_hovered: RGB
+    knob_color_disabled: RGB
+    knob_color_dragging: RGB
+
+    def copy(self) -> "SwitchTheme":
+        return copy.copy(self)
+
 class Theme:
     def __init__(self, theme_dict: Dict) -> None:
         self._name = self._parse_name(theme_dict)
@@ -129,6 +155,35 @@ class Theme:
         self._checkbox_theme = self._parse_checkbox_dict(theme_dict)
         self._text_input_theme = self._parse_text_input_dict(theme_dict)
         self._container_theme = self._parse_container_dict(theme_dict)
+        self._switch_theme = self._parse_switch_dict(theme_dict)
+
+    def _parse_switch_dict(self, theme_dict: Dict) -> SwitchTheme:
+        element_name = "switch"
+        element_dict = self._get_element_dict(theme_dict, element_name)
+
+        return SwitchTheme(
+            base_color=self._parse_element_color(element_dict, element_name, "base_color"),
+            base_color_pressed=self._parse_element_color(element_dict, element_name, "base_color_pressed"),
+            base_color_hovered=self._parse_element_color(element_dict, element_name, "base_color_hovered"),
+            base_color_disabled=self._parse_element_color(element_dict, element_name, "base_color_disabled"),
+            base_color_dragging=self._parse_element_color(element_dict, element_name, "base_color_dragging"),
+            border_color=self._parse_element_color(element_dict, element_name, "border_color"),
+            border_color_pressed=self._parse_element_color(element_dict, element_name, "border_color_pressed"),
+            border_color_hovered=self._parse_element_color(element_dict, element_name, "border_color_hovered"),
+            border_color_disabled=self._parse_element_color(element_dict, element_name, "border_color_disabled"),
+            border_color_dragging=self._parse_element_color(element_dict, element_name, "border_color_dragging"),
+            text_color=self._parse_element_color(element_dict, element_name, "text_color"),
+            text_color_pressed=self._parse_element_color(element_dict, element_name, "text_color_pressed"),
+            text_color_hovered=self._parse_element_color(element_dict, element_name, "text_color_hovered"),
+            text_color_disabled=self._parse_element_color(element_dict, element_name, "text_color_disabled"),
+            text_color_dragging=self._parse_element_color(element_dict, element_name, "text_color_dragging"),
+            knob_color=self._parse_element_color(element_dict, element_name, "knob_color"),
+            knob_color_pressed=self._parse_element_color(element_dict, element_name, "knob_color_pressed"),
+            knob_color_hovered=self._parse_element_color(element_dict, element_name, "knob_color_hovered"),
+            knob_color_disabled=self._parse_element_color(element_dict, element_name, "knob_color_disabled"),
+            knob_color_dragging=self._parse_element_color(element_dict, element_name, "knob_color_dragging")
+        )
+
 
     def _parse_container_dict(self, theme_dict: Dict) -> ContainerTheme:
         element_name = "container"
@@ -299,6 +354,10 @@ class Theme:
     @property
     def container_theme(self) -> ContainerTheme:
         return self._container_theme
+
+    @property
+    def switch_theme(self) -> SwitchTheme:
+        return self._switch_theme
 
 ThemeLike = Theme | Dict | str | Path
 
