@@ -605,13 +605,17 @@ class FontElement:
 class ThemedElement:
     def __init__(self, theme: ThemeLike) -> None:
         self._theme = self._parse_theme(theme)
-        self._update_colors()
+        self._init_colors()
 
     def _parse_theme(self, theme: ThemeLike) -> Theme:
         return load_theme(theme)
 
     def _update_colors(self) -> None:
         """Update colors for the element."""
+        self._init_colors()
+
+    def _init_colors(self) -> None:
+        """Initialize colors for the element. Called during __init__ after parsing the theme."""
         pass
 
     @property

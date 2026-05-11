@@ -62,6 +62,10 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
         ThemedElement.__init__(self, theme=theme)
 
     def _update_colors(self) -> None:
+        self._init_colors()
+
+    def _init_colors(self) -> None:
+        super()._init_colors()
         self._base_color = self.theme.button_theme.base_color
         self._base_color_pressed = self.theme.button_theme.base_color_pressed
         self._base_color_hovered = self.theme.button_theme.base_color_hovered
@@ -186,7 +190,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
         else:
             raise ValueError(f"Color 'border_color_disabled' must be a valid color, not '{value}'.")
 
-
     def debug_draw(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (255, 0, 0), self.rect, width=1)
 
@@ -210,10 +213,14 @@ class TextButton(BaseButton):
                  border_radius: SupportsInt = None,
                  border_width: SupportsInt = None
                  ) -> None:
+
         self._text_color: RGB = TEMP_COLOR
         self._text_color_pressed: RGB = TEMP_COLOR
         self._text_color_hovered: RGB = TEMP_COLOR
         self._text_color_disabled: RGB = TEMP_COLOR
+
+        BaseButton.__init__(self, x=x, y=y, width=width, height=height, theme=theme, on_click=on_click,
+                            on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
         if text is None:
             text = constants.DEFAULT_BUTTON_TEXT
@@ -243,8 +250,9 @@ class TextButton(BaseButton):
 
         self._text_alignment = self._parse_text_alignment(text_alignment)
 
-        BaseButton.__init__(self, x=x, y=y, width=width, height=height, theme=theme, on_click=on_click,
-                            on_hover=on_hover, border_radius=border_radius, border_width=border_width)
+        self._button_label.text_color = self._text_color
+
+        self._update_position(self._x, self._y)
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
@@ -254,12 +262,15 @@ class TextButton(BaseButton):
             raise TypeError(f"Text alignment must be of type 'Alignment', not '{type(text_alignment)}'.")
         return text_alignment
 
-    def _update_colors(self) -> None:
-        super()._update_colors()
+    def _init_colors(self) -> None:
+        super()._init_colors()
         self._text_color = self.theme.button_theme.text_color
         self._text_color_pressed = self.theme.button_theme.text_color_pressed
         self._text_color_hovered = self.theme.button_theme.text_color_hovered
         self._text_color_disabled = self.theme.button_theme.text_color_disabled
+
+    def _update_colors(self) -> None:
+        super()._update_colors()
 
         self._button_label.text_color = self._text_color
 

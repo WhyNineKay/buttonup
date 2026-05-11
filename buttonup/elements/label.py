@@ -64,8 +64,11 @@ class Label(SizedElement, ThemedElement, FontElement, Element):
     def _update_text(self, text: str) -> None:
         self._text = self._parse_text(text)
 
-    def _update_colors(self) -> None:
+    def _init_colors(self) -> None:
         self._text_color = self._theme.label_theme.text_color
+
+    def _update_colors(self) -> None:
+        self._init_colors()
 
     def _get_lines(self) -> List[str]:
         lines = self._text.splitlines()
