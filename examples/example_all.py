@@ -1,22 +1,11 @@
 import pygame
 import buttonup
-
-pygame.init()
-
-DISPLAY_INFO = pygame.display.Info()
-
-WINDOW_WIDTH = min(DISPLAY_INFO.current_w, 1920)
-WINDOW_HEIGHT = min(DISPLAY_INFO.current_h, 1080)
-WINDOW_FPS = 60
-
-pygame.font.init()
+from base import ExampleBase
 
 
-class MainWindow:
-    def __init__(self) -> None:
-        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.clock = pygame.time.Clock()
-        self.running = True
+class ExampleAll(ExampleBase):
+    def __init__(self, WINDOW_WIDTH: int, WINDOW_HEIGHT: int) -> None:
+        super().__init__(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         self.theme = buttonup.theme.load_theme("dark")
 
@@ -52,8 +41,6 @@ class MainWindow:
         self.vbox.add(self.switch)
         self.vbox.apply()
 
-        self.dt = 0.0
-
     def char_transform_function(self, char: str) -> str:
         return char.upper()
 
@@ -69,34 +56,12 @@ class MainWindow:
         else:
             self.checkbox.disable()
 
+    def draw(self, surface: pygame.Surface) -> None:
+        surface.fill(self.theme.color.background)
+        self.vbox.draw(surface)
 
-    def draw(self) -> None:
-        self.window.fill(self.theme.color.background)
-        self.vbox.draw(self.window)
-        pygame.display.flip()
+    def update(self, dt: float) -> None:
+        self.vbox.update(dt)
 
-    def update(self) -> None:
-        self.vbox.update(self.dt)
-
-    def events(self) -> None:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-            self.vbox.handle_event(event)
-
-    def run(self) -> None:
-        while self.running:
-            self.events()
-            self.update()
-            self.draw()
-
-            self.dt = self.clock.tick(WINDOW_FPS) / 1000
-
-def main() -> None:
-    window = MainWindow()
-    window.run()
-
-
-if __name__ == "__main__":
-    main()
+    def handle_event(self, event: pygame.event.Event) -> None:
+        self.vbox.handle_event(event)

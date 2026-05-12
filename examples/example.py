@@ -1,7 +1,14 @@
 import pygame
 import buttonup
 from buttonup.utils import CallbackPackage, Alignment
-from examples.example_button import ButtonExample
+from examples.example_all import ExampleAll
+from examples.example_button import ExampleButton
+from examples.example_checkbox import ExampleCheckbox
+from examples.example_container import ExampleContainer
+from examples.example_label import ExampleLabel
+from examples.example_richtext import ExampleRichText
+from examples.example_switch import ExampleSwitch
+from examples.example_text_input import ExampleTextInput
 
 pygame.init()
 
@@ -24,7 +31,14 @@ class MainWindow:
         self.theme = buttonup.theme.load_theme("dark")
 
         self.example_instances = {
-            "button": ButtonExample(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "all": ExampleAll(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "button": ExampleButton(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "checkbox": ExampleCheckbox(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "container": ExampleContainer(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "label": ExampleLabel(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "richtext": ExampleRichText(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "switch": ExampleSwitch(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "text_input": ExampleTextInput(WINDOW_WIDTH, WINDOW_HEIGHT)
         }
 
         self.selection_box = self._generate_selection_vbox()
@@ -70,6 +84,10 @@ class MainWindow:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.example_instance = None
 
             if self.example_instance:
                 self.example_instance.handle_event(event)

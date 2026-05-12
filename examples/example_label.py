@@ -2,25 +2,13 @@ import math
 import random
 
 import pygame
-
 import buttonup
-
-pygame.init()
-
-DISPLAY_INFO = pygame.display.Info()
-
-WINDOW_WIDTH = min(DISPLAY_INFO.current_w, 1920)
-WINDOW_HEIGHT = min(DISPLAY_INFO.current_h, 1080)
-WINDOW_FPS = 60
-
-pygame.font.init()
+from base import ExampleBase
 
 
-class MainWindow:
-    def __init__(self) -> None:
-        self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.clock = pygame.time.Clock()
-        self.running = True
+class ExampleLabel(ExampleBase):
+    def __init__(self, WINDOW_WIDTH: int, WINDOW_HEIGHT: int) -> None:
+        super().__init__(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         theme = buttonup.theme.load_theme("dark")
 
@@ -31,9 +19,6 @@ class MainWindow:
         self.label.centery = WINDOW_HEIGHT / 2
 
         self.velocity = pygame.Vector2(1000, 300)
-
-        self.dt = 0.0
-
 
         self.text_targets = [
             "Hello, World!",
@@ -49,7 +34,7 @@ class MainWindow:
         for i in range(len(self.text_targets)):
             self.text_targets[i] = self.text_targets[i].replace(" ", "\n")
 
-        self.fonts = [  # monospaced
+        self.fonts = [
             "consolas",
             "courier new",
             "lucida console",
@@ -60,25 +45,24 @@ class MainWindow:
         self.timer_seconds = 0.25
         self.text_eat_dir = -1
 
-    def draw(self) -> None:
-        self.window.fill((30, 30, 30))
-        self.label.draw(self.window)
-        pygame.display.flip()
-
     def change_font(self) -> None:
         self.label.font = random.choice(self.fonts)
 
-    def update(self) -> None:
-        self.label.x += self.velocity.x * self.dt
-        self.label.y += self.velocity.y * self.dt
+    def draw(self, surface: pygame.Surface) -> None:
+        surface.fill((30, 30, 30))
+        self.label.draw(surface)
 
-        if self.label.x + self.label.width >= WINDOW_WIDTH:
-            self.label.x = WINDOW_WIDTH - self.label.width
+    def update(self, dt: float) -> None:
+        self.label.x += self.velocity.x * dt
+        self.label.y += self.velocity.y * dt
+
+        if self.label.x + self.label.width >= self.WINDOW_WIDTH:
+            self.label.x = self.WINDOW_WIDTH - self.label.width
             self.velocity.x *= -1
             self.change_font()
 
-        if self.label.y + self.label.height >= WINDOW_HEIGHT:
-            self.label.y = WINDOW_HEIGHT - self.label.height
+        if self.label.y + self.label.height >= self.WINDOW_HEIGHT:
+            self.label.y = self.WINDOW_HEIGHT - self.label.height
             self.velocity.y *= -1
             self.change_font()
 
@@ -92,8 +76,7 @@ class MainWindow:
             self.velocity.y *= -1
             self.change_font()
 
-
-        self.timer -= self.dt
+        self.timer -= dt
         self.label.font_size = int(50 + 20 * (1 + math.sin(pygame.time.get_ticks() / 500)))
 
         if self.timer <= 0:
@@ -102,7 +85,6 @@ class MainWindow:
             if len(self.label.text) > 0:
                 if self.text_eat_dir == -1:
                     self.label.text = self.label.text[:-1]
-
                 elif self.text_eat_dir == 1:
                     self.label.text += self.text_target[0]
                     self.text_target = self.text_target[1:]
@@ -115,24 +97,5 @@ class MainWindow:
                 self.label.text += self.text_target[0]
                 self.text_target = self.text_target[1:]
 
-
-    def events(self) -> None:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-    def run(self) -> None:
-        while self.running:
-            self.events()
-            self.update()
-            self.draw()
-
-            self.dt = self.clock.tick(WINDOW_FPS) / 1000
-
-def main() -> None:
-    window = MainWindow()
-    window.run()
-
-
-if __name__ == "__main__":
-    main()
+    def handle_event(self, event: pygame.event.Event) -> None:
+        pass

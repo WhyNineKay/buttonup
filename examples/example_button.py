@@ -1,10 +1,10 @@
 import pygame
 
-from .base import ExampleBase
+from base import ExampleBase
 from buttonup.utils import CallbackPackage, Alignment
 import buttonup
 
-class ButtonExample(ExampleBase):
+class ExampleButton(ExampleBase):
     def __init__(self, WINDOW_WIDTH: int, WINDOW_HEIGHT: int) -> None:
         super().__init__(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.theme = buttonup.theme.load_theme("dark")
