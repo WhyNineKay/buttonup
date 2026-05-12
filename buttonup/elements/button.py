@@ -51,10 +51,6 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
         self._border_color_pressed: RGB = TEMP_COLOR
         self._border_color_hovered: RGB = TEMP_COLOR
         self._border_color_disabled: RGB = TEMP_COLOR
-        self._text_color: RGB = TEMP_COLOR
-        self._text_color_pressed: RGB = TEMP_COLOR
-        self._text_color_hovered: RGB = TEMP_COLOR
-        self._text_color_disabled: RGB = TEMP_COLOR
 
         if theme is None:
             theme = load_default_theme()
@@ -274,35 +270,60 @@ class TextButton(BaseButton):
 
         self._button_label.text_color = self._text_color
 
-    def _update_label_position(self) -> None:
-        if self._text_alignment == Alignment.CENTER:
-            self._button_label.center = self.center
-        elif self._text_alignment == Alignment.TOP_LEFT:
-            self._button_label.x = self.x + self._text_padding
-            self._button_label.y = self.y + self._text_padding
-        elif self._text_alignment == Alignment.TOP_RIGHT:
-            self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
-            self._button_label.y = self.y + self._text_padding
-        elif self._text_alignment == Alignment.BOTTOM_LEFT:
-            self._button_label.x = self.x + self._text_padding
-            self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
-        elif self._text_alignment == Alignment.BOTTOM_RIGHT:
-            self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
-            self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
-        elif self._text_alignment == Alignment.CENTER_LEFT:
-            self._button_label.x = self.x + self._text_padding
-            self._button_label.centery = self.centery
-        elif self._text_alignment == Alignment.CENTER_RIGHT:
-            self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
-            self._button_label.centery = self.centery
-        elif self._text_alignment == Alignment.TOP_CENTER:
-            self._button_label.centerx = self.centerx
-            self._button_label.y = self.y + self._text_padding
-        elif self._text_alignment == Alignment.BOTTOM_CENTER:
-            self._button_label.centerx = self.centerx
-            self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
+    def _align_label_center(self) -> None:
+        self._button_label.center = self.center
+
+    def _align_label_top_left(self) -> None:
+        self._button_label.x = self.x + self._text_padding
+        self._button_label.y = self.y + self._text_padding
+
+    def _align_label_top_right(self) -> None:
+        self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
+        self._button_label.y = self.y + self._text_padding
+
+    def _align_label_bottom_left(self) -> None:
+        self._button_label.x = self.x + self._text_padding
+        self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
+
+    def _align_label_bottom_right(self) -> None:
+        self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
+        self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
+
+    def _align_label_center_left(self) -> None:
+        self._button_label.x = self.x + self._text_padding
+        self._button_label.centery = self.centery
+
+    def _align_label_center_right(self) -> None:
+        self._button_label.x = self.x + self.width - self._text_padding - self._button_label.width
+        self._button_label.centery = self.centery
+
+    def _align_label_top_center(self) -> None:
+        self._button_label.centerx = self.centerx
+        self._button_label.y = self.y + self._text_padding
+
+    def _align_label_bottom_center(self)  -> None:
+        self._button_label.centerx = self.centerx
+        self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
+
+    def _align_label(self) -> None:
+        alignment_mapping = {
+            Alignment.CENTER: self._align_label_center,
+            Alignment.TOP_LEFT: self._align_label_top_left,
+            Alignment.TOP_RIGHT: self._align_label_top_right,
+            Alignment.BOTTOM_LEFT: self._align_label_bottom_left,
+            Alignment.BOTTOM_RIGHT: self._align_label_bottom_right,
+            Alignment.CENTER_LEFT: self._align_label_center_left,
+            Alignment.CENTER_RIGHT: self._align_label_center_right,
+            Alignment.TOP_CENTER: self._align_label_top_center,
+            Alignment.BOTTOM_CENTER: self._align_label_bottom_center
+        }
+        if self._text_alignment in alignment_mapping:
+            alignment_mapping[self._text_alignment]()
         else:
             raise ValueError(f"Unsupported text alignment '{self._text_alignment}'.")
+
+    def _update_label_position(self) -> None:
+        self._align_label()
 
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
         super()._update_position(x, y)
