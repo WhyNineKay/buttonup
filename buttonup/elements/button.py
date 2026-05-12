@@ -208,7 +208,6 @@ class TextButton(BaseButton):
                  border_width: SupportsInt = None
                  ) -> None:
 
-
         BaseButton.__init__(self, x=x, y=y, width=width, height=height, theme=theme, on_click=on_click,
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
@@ -287,7 +286,7 @@ class TextButton(BaseButton):
         self._button_label.centerx = self.centerx
         self._button_label.y = self.y + self._text_padding
 
-    def _align_label_bottom_center(self)  -> None:
+    def _align_label_bottom_center(self) -> None:
         self._button_label.centerx = self.centerx
         self._button_label.y = self.y + self.height - self._text_padding - self._button_label.height
 
