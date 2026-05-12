@@ -20,7 +20,7 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
                  text: str = None,
                  font: FontLike = None,
                  font_size: SupportsInt = None,
-                 on_switch: Union[CallbackPackage, BoolCallback] = None,
+                 on_toggle: Union[CallbackPackage, BoolCallback] = None,
                  on_click: Union[CallbackPackage, Callback] = None,
                  on_hover: Union[CallbackPackage, Callback] = None,
                  border_radius: SupportsInt = None,
@@ -87,14 +87,14 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
 
         # ----- On Switch callback
 
-        if on_switch is None:
-            on_switch = lambda _: None
+        if on_toggle is None:
+            on_toggle = lambda _: None
 
-        self._on_toggle: CallbackPackage = ParsingTools.parse_callback_or_callback_package(on_switch, "on_switch")
+        self._on_toggle: CallbackPackage = ParsingTools.parse_callback_or_callback_package(on_toggle, "on_toggle")
 
         if len(self._on_toggle.args) > 0:
             raise ValueError(
-                "on_switch callback cannot have any positional arguments as new switched state will be passed as the "
+                "on_toggle callback cannot have any positional arguments as new switched state will be passed as the "
                 "only argument when called."
             )
         # ----- Padding
