@@ -132,7 +132,9 @@ class ButtonExample(ExampleBase):
                     self.test_subject_button.border_radius -= 1
 
             elif event.key == pygame.K_f:
-                self.test_subject_button.on_click
+                self.test_subject_button.on_hover = self.on_click_1
+            elif event.key == pygame.K_g:
+                self.test_subject_button.on_hover = None
 
     def on_click_1(self) -> None:
         print("CLICK 1 clicked!")

@@ -1,4 +1,4 @@
-from typing import SupportsInt, Union, Tuple, Dict
+from typing import SupportsInt, Union, Tuple, Dict, List
 
 import pygame
 
@@ -189,6 +189,21 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
     def debug_draw(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (255, 0, 0), self.rect, width=1)
 
+    @property
+    def on_click(self) -> CallbackPackage:
+        return self._on_click_callback_package
+
+    @on_click.setter
+    def on_click(self, value: Union[CallbackPackage, Callback, None]) -> None:
+        self._on_click_callback_package = self._parse_named_callback(value, "on_click")
+
+    @property
+    def on_hover(self) -> CallbackPackage:
+        return self._on_hover_callback_package
+
+    @on_hover.setter
+    def on_hover(self, value: Union[CallbackPackage, Callback, None]) -> None:
+        self._on_hover_callback_package = self._parse_named_callback(value, "on_hover")
 
 class TextButton(BaseButton):
     """Base button class with text"""
@@ -456,6 +471,9 @@ class TextButton(BaseButton):
                                   (self._button_label.centerx, self._button_label.y + self._button_label.height),
                                   length=self.width)
 
+    @property
+    def text_surfaces(self) -> List[pygame.Surface]:
+        return self._button_label.text_surfaces
 
 class ImageButton(BaseButton):
     """Base button class with image"""
