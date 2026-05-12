@@ -1,7 +1,5 @@
 import pygame
 import buttonup
-from buttonup.elements.checkbox import CheckStyle
-from buttonup.utils import CallbackPackage, Alignment
 
 pygame.init()
 
@@ -23,8 +21,8 @@ class MainWindow:
         self.theme = buttonup.theme.load_theme("dark")
 
         self.checkbox = buttonup.Checkbox(
-            x=50, y=100, theme=self.theme, on_toggle=CallbackPackage(self.on_checkbox_toggle, (), {}),
-            text="Hello!", check_style=CheckStyle.CHECK, border_radius=7
+            x=50, y=100, theme=self.theme, on_toggle=buttonup.CallbackPackage(self.on_checkbox_toggle, (), {}),
+            text="Hello!", check_style=buttonup.CheckStyle.CHECK, border_radius=7
         )
 
         self.dt = 0.0

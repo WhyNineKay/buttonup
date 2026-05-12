@@ -1,6 +1,5 @@
 import pygame
 import buttonup
-from buttonup.utils import CallbackPackage, Alignment, InteractionState
 
 pygame.init()
 
@@ -65,7 +64,7 @@ class MainWindow:
             self.text_input.disable()
 
     def toggle_checkbox(self) -> None:
-        if self.checkbox.state == InteractionState.DISABLED:
+        if self.checkbox.state == buttonup.InteractionState.DISABLED:
             self.checkbox.enable()
         else:
             self.checkbox.disable()

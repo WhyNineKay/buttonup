@@ -1,6 +1,6 @@
 import pygame
 import buttonup
-from buttonup.utils import CallbackPackage, Alignment
+from buttonup import CallbackPackage, Alignment
 
 pygame.init()
 

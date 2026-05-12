@@ -1,9 +1,6 @@
 import random
 import pygame
 import buttonup
-from buttonup.buttonup_types import RGB
-from buttonup.elements.element import SizedElement, Element
-from buttonup.elements.container import PerpendicularOverflowBehaviour
 
 pygame.init()
 
@@ -16,8 +13,8 @@ WINDOW_FPS = 60
 pygame.font.init()
 
 
-class Rectangle(SizedElement, Element):
-    def __init__(self, x: int, y: int, width: int, height: int, color: RGB) -> None:
+class Rectangle(buttonup.element.SizedElement, buttonup.element.Element):
+    def __init__(self, x: int, y: int, width: int, height: int, color: buttonup.types.RGB) -> None:
         super().__init__(x, y, width, height)
         self.color = color
 
@@ -34,7 +31,7 @@ class MainWindow:
         self.theme = buttonup.theme.load_theme("dark")
 
         self._container_box = buttonup.VBox(
-            x=50, y=50, width=200, height=370, padding=10, spacing=10, overflow_behavior=PerpendicularOverflowBehaviour.FIXED
+            x=50, y=50, width=200, height=370, padding=10, spacing=10, overflow_behavior=buttonup.container.PerpendicularOverflowBehaviour.FIXED
         )
 
         self.generate_elements()

@@ -1,6 +1,5 @@
 import pygame
 import buttonup
-from buttonup.elements.element import DraggableElement, Element
 
 pygame.init()
 
