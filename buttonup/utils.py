@@ -57,7 +57,7 @@ class CallbackPackage:
         self.callback(*self.args, **self.kwargs)
 
 
-class Colors:
+class SystemColors:
     RED = (255, 0, 0)
     ORANGE = (255, 165, 0)
     PINK = (255, 0, 255)

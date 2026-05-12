@@ -9,7 +9,7 @@ from ..buttonup_types import Callback, RGB, FontLike, ColorLike
 from ..theme import ThemeLike, load_default_theme
 from ..utils import CallbackPackage, TEMP_COLOR, ParsingTools
 from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
-    apply_surface_border_radius, Colors
+    apply_surface_border_radius, SystemColors
 from ..utils import InteractionState, Alignment
 
 
@@ -518,7 +518,7 @@ class ImageButton(BaseButton):
 
         if image is None:
             image = generate_debug_image((constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_WIDTH),
-                                         colors=(Colors.PINK, Colors.PURPLE))
+                                         colors=(SystemColors.PINK, SystemColors.PURPLE))
 
         self._original_image = self._parse_image(image)
 
@@ -710,16 +710,16 @@ class SpriteButton(BaseButton):
             sprite_sheet = {
                 InteractionState.INACTIVE: generate_debug_image(
                     (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
-                    colors=(Colors.PINK, Colors.PURPLE)),
+                    colors=(SystemColors.PINK, SystemColors.PURPLE)),
                 InteractionState.HOVERED: generate_debug_image(
                     (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
-                    colors=(Colors.BLUE, Colors.AQUA)),
+                    colors=(SystemColors.BLUE, SystemColors.AQUA)),
                 InteractionState.PRESSED: generate_debug_image(
                     (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
-                    colors=(Colors.GREEN, Colors.LIME)),
+                    colors=(SystemColors.GREEN, SystemColors.LIME)),
                 InteractionState.DISABLED: generate_debug_image(
                     (constants.DEFAULT_BUTTON_WIDTH, constants.DEFAULT_BUTTON_HEIGHT),
-                    colors=(Colors.RED, Colors.ORANGE)),
+                    colors=(SystemColors.RED, SystemColors.ORANGE)),
             }
 
         self._original_sprite_sheet = self._parse_sprite_sheet(sprite_sheet)
