@@ -118,8 +118,11 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         self._cursor_visible = True
         self._cursor_width = max(1, self._text_label.font_size // 5)  # Make cursor width proportional to font size
         self._cursor_height = self._text_label.font.get_height()
-
+    
     def _update_colors(self) -> None:
+        super()._update_colors()
+    
+    def _init_colors(self) -> None:
         self._base_color = self._theme.text_input_theme.base_color
         self._base_color_focused = self._theme.text_input_theme.base_color_focused
         self._base_color_hovered = self._theme.text_input_theme.base_color_hovered
@@ -135,7 +138,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         self._placeholder_color = self._theme.text_input_theme.placeholder_color
         self._caret_color = self._theme.text_input_theme.caret_color
 
-        self._text_label._update_colors()
+        self._text_label.text_color = self._text_color
         self._placeholder_label.text_color = self._placeholder_color
 
     def _parse_char_transform_function(self, char_transform_function: Callable[[str], str]) -> Callable[[str], str]:

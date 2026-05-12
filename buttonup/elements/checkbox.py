@@ -118,8 +118,27 @@ class Checkbox(InteractiveElement, ThemedElement, BorderedElement):
 
         self._checked = ParsingTools.parse_bool_strict(default_checked, "default_checked")
 
-    def _update_colors(self) -> None:
+    def _init_position(self, x: SupportsInt, y: SupportsInt) -> None:
+        super()._init_position(x, y)
+
+        self._checkbox_label.x = self._x + self._size + self._text_padding
+        # Try and center the label vertically with the checkbox, but don't let it go above the top of the checkbox if
+        # it's too tall.
+        self._checkbox_label.y = max(
+            self._y + self._size / 2 - self._checkbox_label.height / 2,
+            self._y
+        )
+
+        self._check_rect.x = self._x + self._check_padding
+        self._check_rect.y = self._y + self._check_padding
+        self._checkbox_rect.x = self._x
+        self._checkbox_rect.y = self._y
+
+    def _init_colors(self) -> None:
         self._checkbox_theme = self.theme.checkbox_theme
+    
+    def _update_colors(self) -> None:
+        super()._update_colors()
 
     def _parse_size(self, size: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(size, "size")
@@ -147,19 +166,6 @@ class Checkbox(InteractiveElement, ThemedElement, BorderedElement):
 
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
         super()._update_position(x, y)
-
-        self._checkbox_label.x = self._x + self._size + self._text_padding
-        # Try and center the label vertically with the checkbox, but don't let it go above the top of the checkbox if
-        # it's too tall.
-        self._checkbox_label.y = max(
-            self._y + self._size / 2 - self._checkbox_label.height / 2,
-            self._y
-        )
-
-        self._check_rect.x = self._x + self._check_padding
-        self._check_rect.y = self._y + self._check_padding
-        self._checkbox_rect.x = self._x
-        self._checkbox_rect.y = self._y
 
     def _update_size(self, size: SupportsInt) -> None:
         """Called to update the size of the checkbox square."""
