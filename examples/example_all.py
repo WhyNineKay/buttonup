@@ -3,6 +3,51 @@ import buttonup
 from base import ExampleBase
 
 
+
+class DraggableLabel(buttonup.element.DraggableElement, buttonup.Label):
+    def __init__(self, x: int, y: int, theme: buttonup.Theme, text: str) -> None:
+        buttonup.Label.__init__(
+            self,
+            x=x,
+            y=y,
+            theme=theme,
+            text=text
+        )
+
+        self._drag_mouse_offset: tuple[int, int] = (0, 0)
+
+        buttonup.element.DraggableElement.__init__(
+            self,
+            x=x,
+            y=y,
+            width=self.width,
+            height=self.height,
+            on_drag_start=self._on_drag_start,
+            on_drag=self._on_drag
+        )
+
+    def _on_drag_start(self) -> None:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        self._drag_mouse_offset = (
+            mouse_x - self.x,
+            mouse_y - self.y
+        )
+
+    def _on_drag(self) -> None:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        new_x = mouse_x - self._drag_mouse_offset[0]
+        new_y = mouse_y - self._drag_mouse_offset[1]
+
+        self._update_position(new_x, new_y)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        # Draw rect
+        pygame.draw.rect(surface, self._text_color, self.rect, 1, border_radius=5)
+
+        super().draw(surface)
+
 class ExampleAll(ExampleBase):
     def __init__(self, WINDOW_WIDTH: int, WINDOW_HEIGHT: int) -> None:
         super().__init__(WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -32,6 +77,8 @@ class ExampleAll(ExampleBase):
 
         self.switch = buttonup.Switch(x=0, y=0, theme=self.theme, text="Toggle me!")
 
+        self.draggable_label = DraggableLabel(x=0, y=0, theme=self.theme, text="Drag me!")
+
         self.vbox = buttonup.VBox(x=50, y=200, width=600, height=600)
         self.vbox.add(self.label1)
         self.vbox.add(self.button1)
@@ -60,8 +107,11 @@ class ExampleAll(ExampleBase):
         surface.fill(self.theme.color.background)
         self.vbox.draw(surface)
 
+        self.draggable_label.draw(surface)
+
     def update(self, dt: float) -> None:
         self.vbox.update(dt)
+        self.draggable_label.update(dt)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         self.vbox.handle_event(event)

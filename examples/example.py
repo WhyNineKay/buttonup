@@ -16,7 +16,7 @@ DISPLAY_INFO = pygame.display.Info()
 
 WINDOW_WIDTH = min(DISPLAY_INFO.current_w, 1920)
 WINDOW_HEIGHT = min(DISPLAY_INFO.current_h, 1080)
-WINDOW_FPS = 60
+WINDOW_FPS = 165
 
 pygame.font.init()
 
