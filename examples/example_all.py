@@ -3,7 +3,6 @@ import buttonup
 from base import ExampleBase
 
 
-
 class DraggableLabel(buttonup.element.DraggableElement, buttonup.Label):
     def __init__(self, x: int, y: int, theme: buttonup.Theme, text: str) -> None:
         buttonup.Label.__init__(
@@ -77,6 +76,9 @@ class ExampleAll(ExampleBase):
 
         self.switch = buttonup.Switch(x=0, y=0, theme=self.theme, text="Toggle me!")
 
+        self.slider1 = buttonup.Slider(x=0, y=0, theme=self.theme, step=0.25)
+        self.slider2 = buttonup.Slider(x=0, y=0, theme=self.theme, axis=buttonup.Axis.VERTICAL, on_change=self._on_slider2_change)
+
         self.draggable_label = DraggableLabel(x=0, y=0, theme=self.theme, text="Drag me!")
 
         self.vbox = buttonup.VBox(x=50, y=200, width=600, height=600)
@@ -86,7 +88,12 @@ class ExampleAll(ExampleBase):
         self.vbox.add(self.panel)
         self.vbox.add(self.text_input)
         self.vbox.add(self.switch)
+        self.vbox.add(self.slider1)
+        self.vbox.add(self.slider2)
         self.vbox.apply()
+
+    def _on_slider2_change(self, value: float) -> None:
+        self.draggable_label.font_size = 12 + int(value * 24)
 
     def char_transform_function(self, char: str) -> str:
         return char.upper()

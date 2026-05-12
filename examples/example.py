@@ -7,6 +7,7 @@ from examples.example_checkbox import ExampleCheckbox
 from examples.example_container import ExampleContainer
 from examples.example_label import ExampleLabel
 from examples.example_richtext import ExampleRichText
+from examples.example_slider import ExampleSlider
 from examples.example_switch import ExampleSwitch
 from examples.example_text_input import ExampleTextInput
 
@@ -38,7 +39,8 @@ class MainWindow:
             "label": ExampleLabel(WINDOW_WIDTH, WINDOW_HEIGHT),
             "richtext": ExampleRichText(WINDOW_WIDTH, WINDOW_HEIGHT),
             "switch": ExampleSwitch(WINDOW_WIDTH, WINDOW_HEIGHT),
-            "text_input": ExampleTextInput(WINDOW_WIDTH, WINDOW_HEIGHT)
+            "text_input": ExampleTextInput(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "slider": ExampleSlider(WINDOW_WIDTH, WINDOW_HEIGHT),
         }
 
         self.selection_box = self._generate_selection_vbox()

@@ -17,8 +17,9 @@ from .elements.container import VBox, HBox, Grid, Panel
 from .elements.label import Label
 from .elements.text_input import TextInput
 from .elements.switch import Switch
+from .elements.slider import Slider
 
-from .utils import InteractionState, CallbackPackage, Alignment
+from .utils import InteractionState, CallbackPackage, Alignment, Axis
 from .theme import Theme, load_theme, load_default_theme
 
 from . import buttonup_types as types

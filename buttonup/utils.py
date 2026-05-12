@@ -39,6 +39,11 @@ class Alignment(Enum):
     def is_vertical_aligned(self) -> bool:
         return self in {Alignment.TOP_CENTER, Alignment.CENTER, Alignment.BOTTOM_CENTER}
 
+
+class Axis(Enum):
+    HORIZONTAL = auto()
+    VERTICAL = auto()
+
 @dataclass
 class CallbackPackage:
     """Container for a callable with positional and keyword arguments.

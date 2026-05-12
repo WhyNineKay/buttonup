@@ -90,6 +90,23 @@
       "knob_color_hovered": "#FFFFFF",
       "knob_color_disabled": "#7A7A7A",
       "knob_color_dragging": "#FFFFFF"
+    },
+    "slider": {
+      "base_color": "#2A2D30",
+      "base_color_pressed": "#24272A",
+      "base_color_hovered": "#32363A",
+      "base_color_disabled": "#24272A",
+      "base_color_dragging": "#24272A",
+      "border_color": "#3B4044",
+      "border_color_pressed": "#313437",
+      "border_color_hovered": "#454A4E",
+      "border_color_disabled": "#3B4044",
+      "border_color_dragging": "#313437",
+      "knob_color": "#FFFFFF",
+      "knob_color_pressed": "#BDBDBD",
+      "knob_color_hovered": "#FFFFFF",
+      "knob_color_disabled": "#7A7A7A",
+      "knob_color_dragging": "#FFFFFF"
     }
   }
 }
