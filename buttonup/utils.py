@@ -19,7 +19,7 @@ class InteractionState(Enum):
     DRAGGING = auto()
 
 
-TEMP_COLOR = (0, 0, 0)
+UNINITIALIZED_COLOR = (0, 0, 0)
 
 
 class Alignment(Enum):

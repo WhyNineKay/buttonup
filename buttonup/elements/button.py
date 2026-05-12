@@ -7,7 +7,7 @@ from .label import Label
 from .. import constants
 from ..buttonup_types import Callback, RGB, FontLike, ColorLike
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR, ParsingTools
+from ..utils import CallbackPackage, UNINITIALIZED_COLOR, ParsingTools
 from ..utils import ColorTools, draw_vertical_plane, draw_horizontal_plane, generate_debug_image, \
     apply_surface_border_radius, SystemColors
 from ..utils import InteractionState, Alignment
@@ -43,148 +43,42 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
 
         InteractiveElement.__init__(self, x=x, y=y, width=width, height=height, on_click=on_click, on_hover=on_hover)
 
-        self._base_color: RGB = TEMP_COLOR
-        self._base_color_pressed: RGB = TEMP_COLOR
-        self._base_color_hovered: RGB = TEMP_COLOR
-        self._base_color_disabled: RGB = TEMP_COLOR
-        self._border_color: RGB = TEMP_COLOR
-        self._border_color_pressed: RGB = TEMP_COLOR
-        self._border_color_hovered: RGB = TEMP_COLOR
-        self._border_color_disabled: RGB = TEMP_COLOR
-
         if theme is None:
             theme = load_default_theme()
 
         ThemedElement.__init__(self, theme=theme)
 
-    def _update_colors(self) -> None:
-        self._init_colors()
+        self._button_theme = self._theme.button_theme
 
-    def _init_colors(self) -> None:
-        super()._init_colors()
-        self._base_color = self.theme.button_theme.base_color
-        self._base_color_pressed = self.theme.button_theme.base_color_pressed
-        self._base_color_hovered = self.theme.button_theme.base_color_hovered
-        self._base_color_disabled = self.theme.button_theme.base_color_disabled
-        self._border_color = self.theme.button_theme.border_color
-        self._border_color_pressed = self.theme.button_theme.border_color_pressed
-        self._border_color_hovered = self.theme.button_theme.border_color_hovered
-        self._border_color_disabled = self.theme.button_theme.border_color_disabled
+    def _update_colors(self) -> None:
+        self._button_theme = self._theme.button_theme
 
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)
 
     def draw(self, surface: pygame.Surface) -> None:
         if self._state == InteractionState.INACTIVE:
-            state_base_color = self._base_color
-            state_border_color = self._border_color
+            base_color = self._button_theme.base_color
+            border_color = self._button_theme.border_color
         elif self._state == InteractionState.HOVERED:
-            state_base_color = self._base_color_hovered
-            state_border_color = self._border_color_hovered
+            base_color = self._button_theme.base_color_hovered
+            border_color = self._button_theme.border_color_hovered
         elif self._state == InteractionState.PRESSED:
-            state_base_color = self._base_color_pressed
-            state_border_color = self._border_color_pressed
+            base_color = self._button_theme.base_color_pressed
+            border_color = self._button_theme.border_color_pressed
         elif self._state == InteractionState.DISABLED:
-            state_base_color = self._base_color_disabled
-            state_border_color = self._border_color_disabled
+            base_color = self._button_theme.base_color_disabled
+            border_color = self._button_theme.border_color_disabled
         else:
-            state_base_color = self._base_color
-            state_border_color = self._border_color
+            base_color = self._button_theme.base_color
+            border_color = self._button_theme.border_color
 
         # Draw base
-        pygame.draw.rect(surface, state_base_color, self.rect, border_radius=self._border_radius)
+        pygame.draw.rect(surface, base_color, self.rect, border_radius=self._border_radius)
 
         # Draw border
-        pygame.draw.rect(surface, state_border_color, self.rect, width=self._border_width,
+        pygame.draw.rect(surface, border_color, self.rect, width=self._border_width,
                          border_radius=self._border_radius)
-
-    @property
-    def base_color(self) -> RGB:
-        return self._base_color
-
-    @base_color.setter
-    def base_color(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._base_color = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'base_color' must be a valid color, not '{value}'.")
-
-    @property
-    def base_color_pressed(self) -> RGB:
-        return self._base_color_pressed
-
-    @base_color_pressed.setter
-    def base_color_pressed(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._base_color_pressed = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'base_color_pressed' must be a valid color, not '{value}'.")
-
-    @property
-    def base_color_hovered(self) -> RGB:
-        return self._base_color_hovered
-
-    @base_color_hovered.setter
-    def base_color_hovered(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._base_color_hovered = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'base_color_hovered' must be a valid color, not '{value}'.")
-
-    @property
-    def base_color_disabled(self) -> RGB:
-        return self._base_color_disabled
-
-    @base_color_disabled.setter
-    def base_color_disabled(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._base_color_disabled = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'base_color_disabled' must be a valid color, not '{value}'.")
-
-    @property
-    def border_color(self) -> RGB:
-        return self._border_color
-
-    @border_color.setter
-    def border_color(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._border_color = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'border_color' must be a valid color, not '{value}'.")
-
-    @property
-    def border_color_pressed(self) -> RGB:
-        return self._border_color_pressed
-
-    @border_color_pressed.setter
-    def border_color_pressed(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._border_color_pressed = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'border_color_pressed' must be a valid color, not '{value}'.")
-
-    @property
-    def border_color_hovered(self) -> RGB:
-        return self._border_color_hovered
-
-    @border_color_hovered.setter
-    def border_color_hovered(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._border_color_hovered = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'border_color_hovered' must be a valid color, not '{value}'.")
-
-    @property
-    def border_color_disabled(self) -> RGB:
-        return self._border_color_disabled
-
-    @border_color_disabled.setter
-    def border_color_disabled(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._border_color_disabled = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'border_color_disabled' must be a valid color, not '{value}'.")
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         pygame.draw.rect(surface, (255, 0, 0), self.rect, width=1)
@@ -204,6 +98,95 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
     @on_hover.setter
     def on_hover(self, value: Union[CallbackPackage, Callback, None]) -> None:
         self._on_hover_callback_package = self._parse_named_callback(value, "on_hover")
+
+    @property
+    def base_color(self) -> RGB:
+        return self._button_theme.base_color
+
+    @base_color.setter
+    def base_color(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.base_color = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def base_color_pressed(self) -> RGB:
+        return self._button_theme.base_color_pressed
+
+    @base_color_pressed.setter
+    def base_color_pressed(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.base_color_pressed = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def base_color_hovered(self) -> RGB:
+        return self._button_theme.base_color_hovered
+
+    @base_color_hovered.setter
+    def base_color_hovered(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.base_color_hovered = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def base_color_disabled(self) -> RGB:
+        return self._button_theme.base_color_disabled
+
+    @base_color_disabled.setter
+    def base_color_disabled(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.base_color_disabled = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def border_color(self) -> RGB:
+        return self._button_theme.border_color
+
+    @border_color.setter
+    def border_color(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.border_color = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def border_color_pressed(self) -> RGB:
+        return self._button_theme.border_color_pressed
+
+    @border_color_pressed.setter
+    def border_color_pressed(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.border_color_pressed = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def border_color_hovered(self) -> RGB:
+        return self._button_theme.border_color_hovered
+
+    @border_color_hovered.setter
+    def border_color_hovered(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.border_color_hovered = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def border_color_disabled(self) -> RGB:
+        return self._button_theme.border_color_disabled
+
+    @border_color_disabled.setter
+    def border_color_disabled(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.border_color_disabled = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
 
 class TextButton(BaseButton):
     """Base button class with text"""
@@ -225,10 +208,6 @@ class TextButton(BaseButton):
                  border_width: SupportsInt = None
                  ) -> None:
 
-        self._text_color: RGB = TEMP_COLOR
-        self._text_color_pressed: RGB = TEMP_COLOR
-        self._text_color_hovered: RGB = TEMP_COLOR
-        self._text_color_disabled: RGB = TEMP_COLOR
 
         BaseButton.__init__(self, x=x, y=y, width=width, height=height, theme=theme, on_click=on_click,
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
@@ -261,7 +240,7 @@ class TextButton(BaseButton):
 
         self._text_alignment = self._parse_text_alignment(text_alignment)
 
-        self._button_label.text_color = self._text_color
+        self._button_label.text_color = self._button_theme.text_color
 
         self._update_position(self._x, self._y)
 
@@ -273,17 +252,9 @@ class TextButton(BaseButton):
             raise TypeError(f"Text alignment must be of type 'Alignment', not '{type(text_alignment)}'.")
         return text_alignment
 
-    def _init_colors(self) -> None:
-        super()._init_colors()
-        self._text_color = self.theme.button_theme.text_color
-        self._text_color_pressed = self.theme.button_theme.text_color_pressed
-        self._text_color_hovered = self.theme.button_theme.text_color_hovered
-        self._text_color_disabled = self.theme.button_theme.text_color_disabled
-
     def _update_colors(self) -> None:
         super()._update_colors()
-
-        self._button_label.text_color = self._text_color
+        self._button_label.text_color = self._button_theme.text_color
 
     def _align_label_center(self) -> None:
         self._button_label.center = self.center
@@ -385,13 +356,13 @@ class TextButton(BaseButton):
 
         # Update label text color based on button state
         if self._state == InteractionState.INACTIVE:
-            self._button_label.text_color = self._text_color
+            self._button_label.text_color = self._button_theme.text_color
         elif self._state == InteractionState.HOVERED:
-            self._button_label.text_color = self._text_color_hovered
+            self._button_label.text_color = self._button_theme.text_color_hovered
         elif self._state == InteractionState.PRESSED:
-            self._button_label.text_color = self._text_color_pressed
+            self._button_label.text_color = self._button_theme.text_color_pressed
         elif self._state == InteractionState.DISABLED:
-            self._button_label.text_color = self._text_color_disabled
+            self._button_label.text_color = self._button_theme.text_color_disabled
 
     @property
     def text_alignment(self) -> Alignment:
@@ -410,50 +381,6 @@ class TextButton(BaseButton):
     def text_padding(self, value: SupportsInt) -> None:
         self._text_padding = self._parse_text_padding(value)
         self._update_label_position()
-
-    @property
-    def text_color(self) -> RGB:
-        return self._text_color
-
-    @text_color.setter
-    def text_color(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._text_color = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'text_color' must be a valid color, not '{value}'.")
-
-    @property
-    def text_color_pressed(self) -> RGB:
-        return self._text_color_pressed
-
-    @text_color_pressed.setter
-    def text_color_pressed(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._text_color_pressed = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'text_color_pressed' must be a valid color, not '{value}'.")
-
-    @property
-    def text_color_hovered(self) -> RGB:
-        return self._text_color_hovered
-
-    @text_color_hovered.setter
-    def text_color_hovered(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._text_color_hovered = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'text_color_hovered' must be a valid color, not '{value}'.")
-
-    @property
-    def text_color_disabled(self) -> RGB:
-        return self._text_color_disabled
-
-    @text_color_disabled.setter
-    def text_color_disabled(self, value: ColorLike) -> None:
-        if ColorTools.is_color(value):
-            self._text_color_disabled = ColorTools.to_rgb(value)
-        else:
-            raise ValueError(f"Color 'text_color_disabled' must be a valid color, not '{value}'.")
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         super().debug_draw(surface)
@@ -474,6 +401,51 @@ class TextButton(BaseButton):
     @property
     def text_surfaces(self) -> List[pygame.Surface]:
         return self._button_label.text_surfaces
+
+    @property
+    def text_color(self) -> RGB:
+        return self._button_theme.text_color
+
+    @text_color.setter
+    def text_color(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.text_color = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def text_color_pressed(self) -> RGB:
+        return self._button_theme.text_color_pressed
+
+    @text_color_pressed.setter
+    def text_color_pressed(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.text_color_pressed = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def text_color_hovered(self) -> RGB:
+        return self._button_theme.text_color_hovered
+
+    @text_color_hovered.setter
+    def text_color_hovered(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.text_color_hovered = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
+    @property
+    def text_color_disabled(self) -> RGB:
+        return self._button_theme.text_color_disabled
+
+    @text_color_disabled.setter
+    def text_color_disabled(self, value: ColorLike) -> None:
+        if ColorTools.is_color(value):
+            self._button_theme.text_color_disabled = ColorTools.to_rgb(value)
+        else:
+            raise ValueError(f"color value must be a color (RGB, hex, or pygame.Color), not '{type(value).__name__}'.")
+
 
 class ImageButton(BaseButton):
     """Base button class with image"""

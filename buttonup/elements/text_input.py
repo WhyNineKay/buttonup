@@ -7,7 +7,7 @@ from .label import Label
 from .. import constants
 from ..buttonup_types import FontLike, Callback, RGB
 from ..theme import ThemeLike, load_default_theme
-from ..utils import CallbackPackage, TEMP_COLOR, InteractionState, dummy_function, ParsingTools
+from ..utils import CallbackPackage, UNINITIALIZED_COLOR, InteractionState, dummy_function, ParsingTools
 import string
 
 WORD_CHARACTERS = string.ascii_letters + string.digits + "_"
@@ -91,20 +91,20 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             (self._width, self._height), pygame.SRCALPHA
         )
 
-        self._base_color: RGB = TEMP_COLOR
-        self._base_color_focused: RGB = TEMP_COLOR
-        self._base_color_hovered: RGB = TEMP_COLOR
-        self._base_color_disabled: RGB = TEMP_COLOR
-        self._border_color: RGB = TEMP_COLOR
-        self._border_color_focused: RGB = TEMP_COLOR
-        self._border_color_hovered: RGB = TEMP_COLOR
-        self._border_color_disabled: RGB = TEMP_COLOR
-        self._text_color: RGB = TEMP_COLOR
-        self._text_color_focused: RGB = TEMP_COLOR
-        self._text_color_hovered: RGB = TEMP_COLOR
-        self._text_color_disabled: RGB = TEMP_COLOR
-        self._placeholder_color: RGB = TEMP_COLOR
-        self._caret_color: RGB = TEMP_COLOR
+        self._base_color: RGB = UNINITIALIZED_COLOR
+        self._base_color_focused: RGB = UNINITIALIZED_COLOR
+        self._base_color_hovered: RGB = UNINITIALIZED_COLOR
+        self._base_color_disabled: RGB = UNINITIALIZED_COLOR
+        self._border_color: RGB = UNINITIALIZED_COLOR
+        self._border_color_focused: RGB = UNINITIALIZED_COLOR
+        self._border_color_hovered: RGB = UNINITIALIZED_COLOR
+        self._border_color_disabled: RGB = UNINITIALIZED_COLOR
+        self._text_color: RGB = UNINITIALIZED_COLOR
+        self._text_color_focused: RGB = UNINITIALIZED_COLOR
+        self._text_color_hovered: RGB = UNINITIALIZED_COLOR
+        self._text_color_disabled: RGB = UNINITIALIZED_COLOR
+        self._placeholder_color: RGB = UNINITIALIZED_COLOR
+        self._caret_color: RGB = UNINITIALIZED_COLOR
 
         if theme is None:
             theme = load_default_theme()
