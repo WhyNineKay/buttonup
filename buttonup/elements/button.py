@@ -48,10 +48,10 @@ class BaseButton(InteractiveElement, ResizableElement, ThemedElement, BorderedEl
 
         ThemedElement.__init__(self, theme=theme)
 
-        self._button_theme = self._theme.button_theme
+        self._button_theme = self._theme.button_theme.copy()
 
     def _update_colors(self) -> None:
-        self._button_theme = self._theme.button_theme
+        self._button_theme = self._theme.button_theme.copy()
 
     def update(self, dt: float) -> None:
         InteractiveElement.update(self, dt)

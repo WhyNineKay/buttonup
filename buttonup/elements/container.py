@@ -59,6 +59,9 @@ class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
 
         self._container_theme = self._theme.container_theme.copy()
 
+    def _update_colors(self) -> None:
+        self._container_theme = self._theme.container_theme.copy()
+
     def draw(self, surface: pygame.Surface) -> None:
         # Draw background
         pygame.draw.rect(surface, self._container_theme.base_color, self._rect, border_radius=self._border_radius)

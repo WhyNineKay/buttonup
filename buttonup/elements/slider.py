@@ -82,7 +82,7 @@ class Slider(DraggableElement, ThemedElement, BorderedElement):
 
         ThemedElement.__init__(self, theme=theme)
 
-        self._slider_theme = self.theme.slider_theme
+        self._slider_theme = self.theme.slider_theme.copy()
 
         # ----- Border
 
@@ -251,7 +251,7 @@ class Slider(DraggableElement, ThemedElement, BorderedElement):
         return self._step > 0
 
     def _update_colors(self) -> None:
-        self._slider_theme = self.theme.slider_theme
+        self._slider_theme = self.theme.slider_theme.copy()
 
     def _get_base_color(self) -> RGB:
         if self._state == InteractionState.DISABLED:

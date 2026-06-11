@@ -135,10 +135,10 @@ class Checkbox(InteractiveElement, ThemedElement, BorderedElement):
         self._checkbox_rect.y = self._y
 
     def _init_colors(self) -> None:
-        self._checkbox_theme = self.theme.checkbox_theme
+        self._checkbox_theme = self.theme.checkbox_theme.copy()
     
     def _update_colors(self) -> None:
-        super()._update_colors()
+        self._checkbox_theme = self.theme.checkbox_theme.copy()
 
     def _parse_size(self, size: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(size, "size")

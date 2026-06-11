@@ -73,7 +73,7 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
 
         ThemedElement.__init__(self, theme=theme)
 
-        self._switch_theme = self.theme.switch_theme
+        self._switch_theme = self.theme.switch_theme.copy()
 
         # ----- Border
 
@@ -251,7 +251,7 @@ class Switch(DraggableElement, ThemedElement, BorderedElement):
         return center_x >= track_center_x
 
     def _update_colors(self) -> None:
-        self._switch_theme = self.theme.switch_theme
+        self._switch_theme = self.theme.switch_theme.copy()
 
     def _parse_text_padding(self, text_padding: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(text_padding, "text_padding")
