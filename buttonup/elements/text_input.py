@@ -385,31 +385,49 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
 
 
     def handle_event(self, event: pygame.event.Event) -> None:
+        # If another element already consumed this event (e.g. an ENTER that submitted
+        # another TextInput), don't process it again.
+        if getattr(event, constants.BUTTONUP_EVENT_CONSUMED_FLAG, False):
+            return
+
         if not self._focused:
             return
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
-                self._key_enter()
-            elif event.key == pygame.K_BACKSPACE:
-                self._key_backspace()
-            elif event.key == pygame.K_DELETE:
-                self._key_delete()
-            elif event.key == pygame.K_LEFT:
-                self._key_left()
-            elif event.key == pygame.K_RIGHT:
-                self._key_right()
-            elif event.key == pygame.K_HOME:
-                self._key_home()
-            elif event.key == pygame.K_END:
-                self._key_end()
-            else:
-                char = event.unicode
+        # Only handle KEYDOWN events here (consolidated handling to avoid
+        # double-processing RETURN/ENTER keys).
+        if event.type != pygame.KEYDOWN:
+            return
 
-                if char.isprintable() and char != "":
-                    self._key_char(char)
+        # Handle submit (ENTER/RETURN) specially: call submit handler and
+        # attempt to mark the pygame event as consumed so other TextInputs
+        # processed later in the same frame won't also submit.
+        if event.key == pygame.K_RETURN:
+            self._key_enter()
+            setattr(event, constants.BUTTONUP_EVENT_CONSUMED_FLAG, True)
+            return
 
-            self._reset_cursor_timer()
+        # Navigation and editing keys
+        if event.key == pygame.K_BACKSPACE:
+            self._key_backspace()
+        elif event.key == pygame.K_DELETE:
+            self._key_delete()
+        elif event.key == pygame.K_LEFT:
+            self._key_left()
+        elif event.key == pygame.K_RIGHT:
+            self._key_right()
+        elif event.key == pygame.K_HOME:
+            self._key_home()
+        elif event.key == pygame.K_END:
+            self._key_end()
+        else:
+            # Some event implementations may not include `unicode`; use getattr
+            # to be defensive.
+            char = getattr(event, "unicode", "")
+
+            if isinstance(char, str) and char.isprintable() and char != "":
+                self._key_char(char)
+
+        self._reset_cursor_timer()
 
     def _reset_cursor_timer(self) -> None:
         self._cursor_flash_timer = 0.0
@@ -417,7 +435,7 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
 
     def _key_char(self, char: str) -> None:
         char = self._char_transform_function(char)
-        # char_transform_function may return "" or string with multiple characters.
+        # Note: char_transform_function may return "" or a string with multiple characters.
 
         if not isinstance(char, str) or char == "":
             return
@@ -511,3 +529,18 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
             index -= 1
 
         return index - cursor_pos
+
+    @property
+    def focused(self) -> bool:
+        return self._focused
+
+    @focused.setter
+    def focused(self, value: bool) -> None:
+        if not isinstance(value, bool):
+            raise TypeError(f"focused must be of type 'bool', not '{type(value)}'.")
+
+        self._focused = value
+
+        # Update values accordingly
+        if not self._focused:
+            self._text_label.x = self._text_padding
