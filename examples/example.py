@@ -10,6 +10,7 @@ from examples.example_richtext import ExampleRichText
 from examples.example_slider import ExampleSlider
 from examples.example_switch import ExampleSwitch
 from examples.example_text_input import ExampleTextInput
+from buttonup.logging_config import setup_logging
 
 pygame.init()
 
@@ -105,6 +106,8 @@ class MainWindow:
             self.dt = self.clock.tick(WINDOW_FPS) / 1000
 
 def main() -> None:
+    setup_logging(debug=True)
+
     window = MainWindow()
     window.run()
 
