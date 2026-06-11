@@ -544,3 +544,21 @@ class TextInput(InteractiveElement, ResizableElement, ThemedElement, BorderedEle
         # Update values accordingly
         if not self._focused:
             self._text_label.x = self._text_padding
+
+    @property
+    def text(self) -> str:
+        return self._text_label.text
+
+    @text.setter
+    def text(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError(f"text must be of type 'str', not '{type(value)}'.")
+
+        if self._max_length is not None and len(value) > self._max_length:
+            raise ValueError(f"text length must be at most {self._max_length}, not {len(value)}.")
+
+        if not all(self._allowed_char_filter(c) for c in value):
+            raise ValueError("text contains characters that are not allowed by the allowed_char_filter.")
+
+        self._update_label_text(value)
+        self._set_cursor_pos(len(value))
