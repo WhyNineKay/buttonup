@@ -24,6 +24,12 @@ class ExampleSlider(ExampleBase):
                 )
             )
 
+        self.vbox.add(
+            buttonup.Slider(
+                x=0, y=0, track_length=100, theme=self.theme
+            )
+        )
+
         self.vbox.apply()
 
 
