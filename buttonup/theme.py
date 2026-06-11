@@ -145,6 +145,7 @@ class SwitchTheme:
     def copy(self) -> "SwitchTheme":
         return copy.copy(self)
 
+
 @dataclass
 class SliderTheme:
     base_color: RGB
@@ -164,6 +165,16 @@ class SliderTheme:
         return copy.copy(self)
 
 
+@dataclass
+class TextBoxTheme:
+    base_color: RGB
+    border_color: RGB
+    text_color: RGB
+
+    def copy(self) -> "TextBoxTheme":
+        return copy.copy(self)
+
+
 class Theme:
     def __init__(self, theme_dict: Dict) -> None:
         self._name = self._parse_name(theme_dict)
@@ -176,6 +187,17 @@ class Theme:
         self._container_theme = self._parse_container_dict(theme_dict)
         self._switch_theme = self._parse_switch_dict(theme_dict)
         self._slider_theme = self._parse_slider_dict(theme_dict)
+        self._text_box_theme = self._parse_text_box_dict(theme_dict)
+
+    def _parse_text_box_dict(self, theme_dict: Dict) -> TextBoxTheme:
+        element_name = "text_box"
+        element_dict = self._get_element_dict(theme_dict, element_name)
+
+        return TextBoxTheme(
+            base_color=self._parse_element_color(element_dict, element_name, "base_color"),
+            border_color=self._parse_element_color(element_dict, element_name, "border_color"),
+            text_color=self._parse_element_color(element_dict, element_name, "text_color"),
+        )
 
     def _parse_slider_dict(self, theme_dict: Dict) -> SliderTheme:
         element_name = "slider"
@@ -222,7 +244,6 @@ class Theme:
             knob_color_disabled=self._parse_element_color(element_dict, element_name, "knob_color_disabled"),
             knob_color_dragging=self._parse_element_color(element_dict, element_name, "knob_color_dragging")
         )
-
 
     def _parse_container_dict(self, theme_dict: Dict) -> ContainerTheme:
         element_name = "container"
@@ -401,6 +422,11 @@ class Theme:
     @property
     def slider_theme(self) -> SliderTheme:
         return self._slider_theme
+
+    @property
+    def text_box_theme(self) -> TextBoxTheme:
+        return self._text_box_theme
+
 
 ThemeLike = Theme | Dict | str | Path
 

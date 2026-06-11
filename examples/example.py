@@ -11,6 +11,7 @@ from examples.example_slider import ExampleSlider
 from examples.example_switch import ExampleSwitch
 from examples.example_text_input import ExampleTextInput
 from buttonup.logging_config import setup_logging
+from examples.example_textbox import ExampleTextBox
 
 pygame.init()
 
@@ -42,6 +43,7 @@ class MainWindow:
             "switch": ExampleSwitch(WINDOW_WIDTH, WINDOW_HEIGHT),
             "text_input": ExampleTextInput(WINDOW_WIDTH, WINDOW_HEIGHT),
             "slider": ExampleSlider(WINDOW_WIDTH, WINDOW_HEIGHT),
+            "text_box": ExampleTextBox(WINDOW_WIDTH, WINDOW_HEIGHT)
         }
 
         self.selection_box = self._generate_selection_vbox()

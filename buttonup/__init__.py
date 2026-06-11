@@ -18,6 +18,7 @@ from .elements.label import Label
 from .elements.text_input import TextInput
 from .elements.switch import Switch
 from .elements.slider import Slider
+from .elements.text_box import TextBox, TextOverflowBehavior, TextWrapBehavior
 
 from .utils import InteractionState, CallbackPackage, Alignment, Axis
 from .theme import Theme, load_theme, load_default_theme
