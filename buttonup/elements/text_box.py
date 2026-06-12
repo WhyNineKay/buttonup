@@ -21,6 +21,7 @@ from typing import Optional, SupportsInt, List
 
 import pygame
 
+from ..theme import TextBoxTheme
 from .. import constants
 from ..buttonup_types import FontLike
 from ..elements.element import ResizableElement, ThemedElement, BorderedElement, FontElement, Element
@@ -505,6 +506,6 @@ class TextBox(ResizableElement, ThemedElement, BorderedElement, FontElement, Ele
         self._update_layout()
 
     @property
-    def text_box_theme(self) -> ThemeLike.TextBoxTheme:
+    def text_box_theme(self) -> TextBoxTheme:
         return self._textbox_theme
 
