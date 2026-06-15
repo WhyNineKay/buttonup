@@ -29,7 +29,7 @@ class LabelTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class ButtonTheme:
     base_color: RGB
     base_color_pressed: RGB
@@ -48,7 +48,7 @@ class ButtonTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class ColorTheme:
     background: RGB
     surface: RGB
@@ -61,7 +61,7 @@ class ColorTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class CheckboxTheme:
     base_color: RGB
     base_color_pressed: RGB
@@ -88,7 +88,7 @@ class CheckboxTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class TextInputTheme:
     base_color: RGB
     base_color_focused: RGB
@@ -109,7 +109,7 @@ class TextInputTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class ContainerTheme:
     base_color: RGB
     border_color: RGB
@@ -119,7 +119,7 @@ class ContainerTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class SwitchTheme:
     base_color: RGB
     base_color_pressed: RGB
@@ -146,7 +146,7 @@ class SwitchTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class SliderTheme:
     base_color: RGB
     base_color_pressed: RGB
@@ -165,7 +165,7 @@ class SliderTheme:
         return copy.copy(self)
 
 
-@dataclass
+@dataclass(slots=True)
 class TextBoxTheme:
     base_color: RGB
     border_color: RGB
