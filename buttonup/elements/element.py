@@ -634,8 +634,7 @@ class ContainerElement(Element, ResizableElement):
                  y: SupportsInt,
                  width: SupportsInt,
                  height: SupportsInt,
-                 elements: List[SizedElement] = None,
-                 enforce_layout_cleanliness: bool = None
+                 elements: List[SizedElement] = None
                  ) -> None:
         ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
 
@@ -644,22 +643,12 @@ class ContainerElement(Element, ResizableElement):
 
         self._elements = self._parse_elements(elements)
 
-        if enforce_layout_cleanliness is None:
-            self._enforce_layout_cleanliness = True
-        else:
-            self._enforce_layout_cleanliness = ParsingTools.parse_bool_strict(
-                enforce_layout_cleanliness, "enforce_layout_cleanliness"
-            )
-
         self._layout_dirty = True
 
-    def _raise_or_apply_if_dirty(self) -> None:
+    def _raise_if_dirty(self) -> None:
         if self._layout_dirty:
-            if self._enforce_layout_cleanliness:
-                raise RuntimeError("Container layout is dirty: Elements are not synced to container. Please call the "
-                                   "'apply' method to update the layout before drawing, updating, or handling events.")
-            else:
-                self.apply()
+            raise RuntimeError("Container layout is dirty: Elements are not synced to container. Please call the "
+                               "'apply' method to update the layout before drawing, updating, or handling events.")
 
     def _parse_elements(self, elements: List[SizedElement]) -> List[SizedElement]:
         if not isinstance(elements, list):
@@ -695,21 +684,21 @@ class ContainerElement(Element, ResizableElement):
         self._layout_dirty = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        self._raise_or_apply_if_dirty()
+        self._raise_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):
                 element.draw(surface)
 
     def update(self, dt: float) -> None:
-        self._raise_or_apply_if_dirty()
+        self._raise_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):
                 element.update(dt)
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        self._raise_or_apply_if_dirty()
+        self._raise_if_dirty()
 
         for element in self._elements:
             if isinstance(element, Element):

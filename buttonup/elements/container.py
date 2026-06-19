@@ -30,7 +30,7 @@ class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
                  element: SizedElement = None,
                  padding: SupportsInt = None,
                  border_radius: SupportsInt = None,
-                 border_width: SupportsInt = None,
+                 border_width: SupportsInt = None
                  ) -> None:
         if element is None:
             self._element = None
@@ -139,12 +139,11 @@ class VBox(ContainerElement):
                  width: SupportsInt,
                  height: SupportsInt,
                  elements: List[SizedElement] = None,
-                 enforce_layout_cleanliness: bool = None,
                  padding: SupportsInt = None,
                  spacing: SupportsInt = None,
                  overflow_behavior: PerpendicularOverflowBehaviour = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements, enforce_layout_cleanliness)
+        super().__init__(x, y, width, height, elements)
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
@@ -209,12 +208,11 @@ class HBox(ContainerElement):
                  width: SupportsInt,
                  height: SupportsInt,
                  elements: List[SizedElement] = None,
-                 enforce_layout_cleanliness: bool = None,
                  padding: SupportsInt = None,
                  spacing: SupportsInt = None,
                  overflow_behavior: PerpendicularOverflowBehaviour = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements, enforce_layout_cleanliness)
+        super().__init__(x, y, width, height, elements)
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
@@ -281,12 +279,11 @@ class Grid(ContainerElement):
                  elements: List[SizedElement] = None,
                  columns: SupportsInt = None,
                  row_height: SupportsInt = None,
-                 enforce_layout_cleanliness: bool = None,
                  padding: SupportsInt = None,
                  spacing: SupportsInt = None,
                  fill_order: GridFillOrder = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements, enforce_layout_cleanliness)
+        super().__init__(x, y, width, height, elements)
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
