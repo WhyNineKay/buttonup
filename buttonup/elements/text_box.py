@@ -30,6 +30,10 @@ from ..utils import ParsingTools
 from enum import Enum, auto
 from dataclasses import dataclass
 
+
+ELLIPSIS_STRING = "..."
+
+
 class TextOverflowBehavior(Enum):
     CLIP = auto()
     ELLIPSIS = auto()
@@ -220,6 +224,8 @@ class TextBox(ResizableElement, ThemedElement, BorderedElement, FontElement, Ele
         super()._update_colors()
         self._textbox_theme = self._theme.text_box_theme.copy()
 
+        self._rerender_line_fragments()
+
     def _parse_overflow_behavior(self, overflow_behavior: TextOverflowBehavior) -> TextOverflowBehavior:
         if not isinstance(overflow_behavior, TextOverflowBehavior):
             raise ValueError(f"Invalid overflow_behavior: {overflow_behavior}")
@@ -241,8 +247,8 @@ class TextBox(ResizableElement, ThemedElement, BorderedElement, FontElement, Ele
     def _update_layout(self) -> None:
         self._lines.clear()
 
-        inner_width = self._inner_width()
-        inner_height = self._inner_height()
+        inner_width = self.inner_width
+        inner_height = self.inner_height
 
         if inner_width <= 0 or inner_height <= 0:
             return
@@ -285,10 +291,19 @@ class TextBox(ResizableElement, ThemedElement, BorderedElement, FontElement, Ele
 
             y += line_height
 
-    def _inner_width(self) -> int:
+    def _rerender_line_fragments(self) -> None:
+        """
+        Rerender the line fragments without recalculating the entire layout.
+        """
+        for line in self._lines:
+            line.text_surface = self._render_text(line.text)
+
+    @property
+    def inner_width(self) -> int:
         return self._width - self._padding_left - self._padding_right
 
-    def _inner_height(self) -> int:
+    @property
+    def inner_height(self) -> int:
         return self._height - self._padding_top - self._padding_bottom
 
     def _measure_text(self, text: str) -> int:
@@ -418,17 +433,15 @@ class TextBox(ResizableElement, ThemedElement, BorderedElement, FontElement, Ele
         return re.findall(r"\S+\s*", text)
 
     def _ellipsise_line(self, text: str, max_width: int) -> str:
-        ellipsis_string = "..."
-
-        if self._measure_text(ellipsis_string) > max_width:
+        if self._measure_text(ELLIPSIS_STRING) > max_width:
             return ""
 
         text = text.rstrip()
 
-        while text and self._measure_text(text + ellipsis_string) > max_width:
+        while text and self._measure_text(text + ELLIPSIS_STRING) > max_width:
             text = text[:-1]
 
-        return text + ellipsis_string
+        return text + ELLIPSIS_STRING
 
     @property
     def padding_left(self) -> SupportsInt:

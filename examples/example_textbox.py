@@ -11,7 +11,7 @@ class ExampleTextBox(ExampleBase):
         self.theme = buttonup.theme.load_theme("dark")
 
         self._text_box = buttonup.TextBox(
-            x=230,
+            x=330,
             y=10,
             width=400,
             height=200,
@@ -24,7 +24,7 @@ class ExampleTextBox(ExampleBase):
             wrap_behavior=buttonup.TextWrapBehavior.WORD,
             overflow_behavior=buttonup.TextOverflowBehavior.ELLIPSIS,
             border_radius=10,
-            font="comic sans",
+            font="consolas",
         )
 
         self._timer_label = buttonup.Label(
@@ -44,12 +44,21 @@ class ExampleTextBox(ExampleBase):
                 buttonup.TextButton(
                     x=0,
                     y=0,
-                    width=180,
+                    width=300,
                     height=40,
-                    text="Start Profile",
+                    text="Profile: Update Layout",
                     theme=self.theme,
                     on_click=self._test_profile_update_layout
-                )
+                ),
+                buttonup.TextButton(
+                    x=0,
+                    y=0,
+                    width=300,
+                    height=40,
+                    text="Profile: Change Theme",
+                    theme=self.theme,
+                    on_click=self._test_profile_change_theme
+                ),
             ]
         )
         self._profile_test_vbox.apply()
@@ -59,6 +68,18 @@ class ExampleTextBox(ExampleBase):
         start_time = time.perf_counter()
 
         self._text_box._update_layout()
+
+        end_time = time.perf_counter()
+
+        elapsed_time = end_time - start_time
+
+        self._timer_label.text = f"Time: {self._format_time(elapsed_time)}"
+
+    def _test_profile_change_theme(self) -> None:
+        # Use a time module to profile the code
+        start_time = time.perf_counter()
+
+        self._text_box.theme = buttonup.theme.load_theme("dark")
 
         end_time = time.perf_counter()
 
