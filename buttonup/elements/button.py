@@ -501,6 +501,9 @@ class ImageButton(BaseButton):
         BaseButton.__init__(self, x=x, y=y, width=width, height=height, theme=theme, on_click=on_click,
                             on_hover=on_hover, border_radius=border_radius, border_width=border_width)
 
+        if not self._image_size_dominant:
+            self._scale_image()
+
     def _parse_padding(self, padding: SupportsInt) -> int:
         return ParsingTools.parse_non_negative_int(padding, "padding")
 
@@ -563,6 +566,25 @@ class ImageButton(BaseButton):
             self._pressed_image = self._generate_pressed_image()
             self._disabled_image = self._generate_disabled_image()
 
+    def _scale_image(self) -> None:
+        new_image_width = self._width - self._padding * 2
+        new_image_height = self._height - self._padding * 2
+
+        if self._preserve_aspect_ratio:
+            original_aspect_ratio = self._original_image.get_width() / self._original_image.get_height()
+            target_aspect_ratio = new_image_width / new_image_height
+
+            if target_aspect_ratio > original_aspect_ratio:
+                # Target is wider than original, fit to height
+                new_image_width = int(new_image_height * original_aspect_ratio)
+            else:
+                # Target is taller than original, fit to width
+                new_image_height = int(new_image_width / original_aspect_ratio)
+
+        self._image = pygame.transform.scale(self._original_image, (new_image_width, new_image_height))
+
+        self._update_state_images()
+
     def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         if self._image_size_dominant:
             # If the image size is dominant, we update the button size to fit the image with padding.
@@ -571,28 +593,15 @@ class ImageButton(BaseButton):
             width = image_width + self._padding * 2
             height = image_height + self._padding * 2
 
+        # We then update the dimensions as normal.
         super()._update_dimensions(width, height)
 
+        # Now, we scale the image to fit.
         if not self._image_size_dominant:
-            # If the button size is dominant, we update the image size to fit the button with padding.
-            image_width = self._width - self._padding * 2
-            image_height = self._height - self._padding * 2
+            self._scale_image()
 
-            if self._preserve_aspect_ratio:
-                original_aspect_ratio = self._original_image.get_width() / self._original_image.get_height()
-                target_aspect_ratio = image_width / image_height
-
-                if target_aspect_ratio > original_aspect_ratio:
-                    # Target is wider than original, fit to height
-                    image_width = int(image_height * original_aspect_ratio)
-                else:
-                    # Target is taller than original, fit to width
-                    image_height = int(image_width / original_aspect_ratio)
-
-            self._image = pygame.transform.scale(self._original_image, (image_width, image_height))
-
-            self._update_state_images()
-            self._update_images_border_radius()
+        self._update_state_images()
+        self._update_images_border_radius()
 
     def _get_adjusted_border_radius(self) -> int:
         # Adjust border radius to fit the image size if necessary
