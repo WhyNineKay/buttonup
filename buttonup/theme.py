@@ -498,6 +498,5 @@ def load_theme(theme: ThemeLike) -> Theme:
         raise TypeError(f"Theme '{theme}' is not a valid Theme, Path, dict, or built-in theme name.")
 
 
-# TODO: make loading default theme come from cache and not from file every time
 def load_default_theme() -> Theme:
-    return Theme(_load_builtin_theme_dict(DEFAULT_THEME_NAME))
+    return load_theme(DEFAULT_THEME_NAME)
