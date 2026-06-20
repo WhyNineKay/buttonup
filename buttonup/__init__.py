@@ -13,7 +13,7 @@ from .elements import element
 
 from .elements.button import TextButton, ImageButton, SpriteButton
 from .elements.checkbox import Checkbox, CheckStyle
-from .elements.container import VBox, HBox, Grid, Panel
+from .elements.container import VBox, HBox, UniformGrid, Panel, GridFillOrder
 from .elements.label import Label
 from .elements.text_input import TextInput
 from .elements.switch import Switch

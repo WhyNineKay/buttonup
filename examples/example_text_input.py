@@ -13,7 +13,7 @@ class ExampleTextInput(ExampleBase):
             x=50, y=100, theme=self.theme, text=""
         )
 
-        self.vbox = buttonup.Grid(x=50, y=200, width=130, height=200, row_height=50, columns=2)
+        self.vbox = buttonup.UniformGrid(x=50, y=200, width=200, height=200, rows=2, columns=2)
         self.text_boxes_focus_example: list[buttonup.TextInput] = []
 
         for i in range(4):

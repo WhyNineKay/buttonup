@@ -3,12 +3,12 @@ element.py
 """
 import math
 from pathlib import Path
-from typing import SupportsInt, Tuple, Union, Optional, List, Any
+from typing import SupportsInt, Tuple, Union, Optional, List, Any, Iterable, Iterator
 
 import pygame
 
 from ..buttonup_types import Callback, FontLike
-from ..theme import Theme, ThemeLike, load_theme
+from ..theme import Theme, ThemeLike, load_theme, ContainerTheme
 from ..utils import CallbackPackage, InteractionState, ParsingTools
 from .. import constants
 
@@ -628,117 +628,6 @@ class ThemedElement:
         self._update_colors()
 
 
-class ContainerElement(Element, ResizableElement):
-    def __init__(self,
-                 x: SupportsInt,
-                 y: SupportsInt,
-                 width: SupportsInt,
-                 height: SupportsInt,
-                 elements: List[SizedElement] = None
-                 ) -> None:
-        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
-
-        if elements is None:
-            elements = []
-
-        self._elements = self._parse_elements(elements)
-
-        self._layout_dirty = True
-
-    def _raise_if_dirty(self) -> None:
-        if self._layout_dirty:
-            raise RuntimeError("Container layout is dirty: Elements are not synced to container. Please call the "
-                               "'apply' method to update the layout before drawing, updating, or handling events.")
-
-    def _parse_elements(self, elements: List[SizedElement]) -> List[SizedElement]:
-        if not isinstance(elements, list):
-            raise TypeError(f"Elements must be a list of SizedElement objects, not '{type(elements)}'.")
-
-        for element in elements:
-            if not isinstance(element, SizedElement):
-                raise TypeError(f"All elements must be of type SizedElement, not '{type(element)}'.")
-
-        return elements
-
-    def add(self, element: SizedElement) -> None:
-        if not isinstance(element, SizedElement):
-            raise TypeError(f"Element must be of type SizedElement, not '{type(element)}'.")
-
-        self._elements.append(element)
-        self._layout_dirty = True
-
-    def remove(self, element: SizedElement) -> None:
-        if element in self._elements:
-            self._elements.remove(element)
-        else:
-            raise ValueError("Element not found in container.")
-
-        self._layout_dirty = True
-
-    def clear(self) -> None:
-        self._elements.clear()
-        self._layout_dirty = True
-
-    def apply(self) -> None:
-        """Apply the containers arrangement functionality. MUST be implemented by subclasses."""
-        self._layout_dirty = False
-
-    def draw(self, surface: pygame.Surface) -> None:
-        self._raise_if_dirty()
-
-        for element in self._elements:
-            if isinstance(element, Element):
-                element.draw(surface)
-
-    def update(self, dt: float) -> None:
-        self._raise_if_dirty()
-
-        for element in self._elements:
-            if isinstance(element, Element):
-                element.update(dt)
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        self._raise_if_dirty()
-
-        for element in self._elements:
-            if isinstance(element, Element):
-                element.handle_event(event)
-
-    def debug_draw(self, surface: pygame.Surface) -> None:
-        for element in self._elements:
-            if isinstance(element, Element):
-                element.debug_draw(surface)
-
-        pygame.draw.rect(surface, (255, 0, 0), self._rect, 1)
-
-    def _update_position(self, x: SupportsInt, y: SupportsInt, apply: bool = True) -> None:
-        ResizableElement._update_position(self, x, y)
-
-        if apply:
-            self.apply()
-
-    def _update_dimensions(self, width: SupportsInt, height: SupportsInt, apply: bool = True) -> None:
-        ResizableElement._update_dimensions(self, width, height)
-
-        if apply:
-            self.apply()
-
-    @property
-    def elements(self) -> List[SizedElement]:
-        return self._elements.copy()
-
-    @elements.setter
-    def elements(self, elements: List[SizedElement]) -> None:
-        self._elements = self._parse_elements(elements)
-        self._layout_dirty = True
-
-    def extend(self, elements: List[SizedElement]) -> None:
-        elements = self._parse_elements(elements)
-
-        self._elements.extend(elements)
-        self._layout_dirty = True
-
-
 class BorderedElement:
     def __init__(self, border_radius: SupportsInt, border_width: SupportsInt) -> None:
         self._border_radius = self._parse_border_radius(border_radius)
@@ -771,3 +660,332 @@ class BorderedElement:
 
     def _update_border_width(self, value: SupportsInt) -> None:
         self._border_width = self._parse_border_width(value)
+
+
+class BaseContainerElement(Element, ResizableElement, ThemedElement, BorderedElement):
+    """
+    Design Principle
+
+    Modifying elements inside the container makes it dirty, and the user will have to MANUALLY call apply().
+    Changing the containers position, or dimensions will AUTOMATICALLY call apply() itself.
+    """
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 theme: ThemeLike,
+                 draw_background: bool,
+                 border_radius: SupportsInt,
+                 border_width: SupportsInt,
+                 propagate_theme_change: bool
+                 ) -> None:
+        ResizableElement.__init__(self, x=x, y=y, width=width, height=height)
+        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
+        ThemedElement.__init__(self, theme=theme)
+
+        self._draw_background = self._parse_draw_background(draw_background)
+
+        self._layout_dirty = True
+
+        self._container_theme = self._theme.container_theme.copy()
+
+        self._propagate_theme_change = self._parse_propagate_theme_change(propagate_theme_change)
+
+
+    def _propagate_theme(self) -> None:
+        """
+        Propagate the current theme to child elements.
+
+        Called when the theme is updated OR when apply() is called, if propagate_theme_change is True.
+
+        MUST be implemented by subclasses.
+        """
+        pass
+
+
+    @staticmethod
+    def _parse_propagate_theme_change(value: bool) -> bool:
+        if not isinstance(value, bool):
+            raise TypeError(f"propagate_theme_change must be of type bool, not {type(value).__name__}.")
+
+        return value
+
+    @staticmethod
+    def _parse_draw_background(value: bool) -> bool:
+        if not isinstance(value, bool):
+            raise TypeError(f"draw_background must be of type bool, not {type(value).__name__}.")
+
+        return value
+
+    def _raise_if_dirty(self) -> None:
+        if self._layout_dirty:
+            raise RuntimeError(
+                "Container layout is dirty: Elements are not synced to container. Please call the 'apply' method to"
+                "update the layout before drawing, updating, or handling events."
+            )
+
+    def apply(self) -> None:
+        """Apply the containers arrangement functionality. MUST be implemented by subclasses."""
+        self._layout_dirty = False
+
+        if self._propagate_theme_change:
+            self._propagate_theme()
+
+    def draw(self, surface: pygame.Surface) -> None:
+        self._raise_if_dirty()
+
+        if self._draw_background:
+            # Draw background
+            pygame.draw.rect(surface, self._container_theme.base_color, self._rect, border_radius=self._border_radius)
+
+            # Draw border
+            if self._border_width > 0:
+                pygame.draw.rect(
+                    surface,
+                    self._container_theme.border_color,
+                    self._rect,
+                    width=self._border_width,
+                    border_radius=self._border_radius
+                )
+
+    def update(self, dt: float) -> None:
+        self._raise_if_dirty()
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        self._raise_if_dirty()
+
+    def debug_draw(self, surface: pygame.Surface) -> None:
+        self._raise_if_dirty()
+
+        pygame.draw.rect(surface, (255, 0, 0), self._rect, 1)
+
+    def _update_position(self, x: SupportsInt, y: SupportsInt,) -> None:
+        ResizableElement._update_position(self, x, y)
+        self.apply()
+
+    def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
+        ResizableElement._update_dimensions(self, width, height)
+        self.apply()
+
+    def _update_colors(self) -> None:
+        self._container_theme = self._theme.container_theme.copy()
+
+        if self._propagate_theme_change:
+            self._propagate_theme()
+
+    @property
+    def propagate_theme_change(self) -> bool:
+        return self._propagate_theme_change
+
+    @propagate_theme_change.setter
+    def propagate_theme_change(self, value: bool) -> None:
+        self._propagate_theme_change = self._parse_propagate_theme_change(value)
+
+    @property
+    def draw_background(self) -> bool:
+        return self._draw_background
+
+    @draw_background.setter
+    def draw_background(self, value: bool) -> None:
+        self._draw_background = self._parse_draw_background(value)
+
+    @property
+    def container_theme(self) -> ContainerTheme:
+        return self._container_theme
+
+    @property
+    def layout_dirty(self) -> bool:
+        return self._layout_dirty
+
+
+class SingleContainerElement(BaseContainerElement):
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 theme: ThemeLike,
+                 element: Union[SizedElement, None],
+                 draw_background: bool,
+                 border_radius: SupportsInt,
+                 border_width: SupportsInt,
+                 propagate_theme_change: bool
+                 ) -> None:
+        super().__init__(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change
+        )
+
+        self._element = self._parse_element(element)
+
+    @staticmethod
+    def _parse_element(value: Union[SizedElement, None]) -> Union[SizedElement, None]:
+        if value is not None and not isinstance(value, SizedElement):
+            raise TypeError(f"element must be of type SizedElement or None, not {type(value).__name__}.")
+
+        return value
+
+    @property
+    def element(self) -> Union[SizedElement, None]:
+        return self._element
+
+    @element.setter
+    def element(self, value: Union[SizedElement, None]) -> None:
+        self._element = self._parse_element(value)
+        self._layout_dirty = True
+
+    def _propagate_theme(self) -> None:
+        if self._element is None:
+            return
+
+        if not isinstance(self._element, ThemedElement):
+            return
+
+        self._element.theme = self._theme
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+
+        if isinstance(self._element, Element):
+            self._element.draw(surface)
+
+    def update(self, dt: float) -> None:
+        super().update(dt)
+
+        if isinstance(self._element, Element):
+            self._element.update(dt)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        super().handle_event(event)
+
+        if isinstance(self._element, Element):
+            self._element.handle_event(event)
+
+    def debug_draw(self, surface: pygame.Surface) -> None:
+        super().debug_draw(surface)
+
+        if isinstance(self._element, Element):
+            self._element.debug_draw(surface)
+
+
+class MultiContainerElement(BaseContainerElement):
+    def __init__(self,
+                 x: SupportsInt,
+                 y: SupportsInt,
+                 width: SupportsInt,
+                 height: SupportsInt,
+                 theme: ThemeLike,
+                 elements: Iterable[SizedElement],
+                 draw_background: bool,
+                 border_radius: SupportsInt,
+                 border_width: SupportsInt,
+                 propagate_theme_change: bool
+                 ) -> None:
+        super().__init__(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change
+        )
+
+        # The iterable converts to a list.
+        self._elements: List[SizedElement] = self._parse_elements(elements)
+
+    @staticmethod
+    def _parse_element(value: Union[SizedElement]) -> SizedElement:
+        if not isinstance(value, SizedElement):
+            raise TypeError(f"element must be of type SizedElement, not {type(value).__name__}.")
+
+        return value
+
+    @staticmethod
+    def _parse_elements(value: Iterable[SizedElement]) -> List[SizedElement]:
+        if not isinstance(value, Iterable):
+            raise TypeError(f"elements must be an iterable of SizedElement, not {type(value).__name__}.")
+
+        elements: List[SizedElement] = []
+
+        for i, element in enumerate(value):
+            if not isinstance(element, SizedElement):
+                raise TypeError(f"element at index {i} must be of type SizedElement, not {type(element).__name__}.")
+
+            elements.append(element)
+
+        return elements
+
+    @property
+    def elements(self) -> List[SizedElement]:
+        """Returns a copy of the elements list to prevent external modification."""
+        return self._elements.copy()
+
+    @elements.setter
+    def elements(self, value: Iterable[SizedElement]) -> None:
+        self._elements = self._parse_elements(value)
+        self._layout_dirty = True
+
+    def add(self, element: SizedElement) -> None:
+        self._elements.append(self._parse_element(element))
+        self._layout_dirty = True
+
+    def remove(self, element: SizedElement) -> None:
+        if element not in self._elements:
+            raise ValueError("Element not found in container.")
+
+        self._elements.remove(element)
+        self._layout_dirty = True
+
+    def clear(self) -> None:
+        self._elements.clear()
+        self._layout_dirty = True
+
+    def _propagate_theme(self) -> None:
+        for element in self._elements:
+            if not isinstance(element, ThemedElement):
+                continue
+
+            element.theme = self._theme
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.draw(surface)
+
+    def update(self, dt: float) -> None:
+        super().update(dt)
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.update(dt)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        super().handle_event(event)
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.handle_event(event)
+
+    def debug_draw(self, surface: pygame.Surface) -> None:
+        super().debug_draw(surface)
+
+        for element in self._elements:
+            if isinstance(element, Element):
+                element.debug_draw(surface)
+
+    def extend(self, elements: Iterable[SizedElement]) -> None:
+        for element in elements:
+            self.add(element)

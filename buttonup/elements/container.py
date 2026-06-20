@@ -1,53 +1,39 @@
 import math
 from enum import Enum, auto
-from typing import SupportsInt, List, Optional
+from typing import SupportsInt, List, Optional, Union, Iterable, Tuple
 
 import pygame
 
-from .element import ContainerElement, SizedElement, ResizableElement, ThemedElement, Element, BorderedElement
+from .element import SizedElement, SingleContainerElement, MultiContainerElement
 from .. import constants
 from ..theme import load_default_theme, ThemeLike
-from ..utils import ParsingTools
+from ..utils import ParsingTools, Alignment, get_alignment_position
 
 
 class GridFillOrder(Enum):
-    ROW_MAJOR = auto()
-    COLUMN_MAJOR = auto()
+    ROW_FIRST = auto()
+    COLUMN_FIRST = auto()
 
-
-class PerpendicularOverflowBehaviour(Enum):
-    EXPAND = auto()
-    FIXED = auto()
-
-
-class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
+class Panel(SingleContainerElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
                  width: SupportsInt,
                  height: SupportsInt,
-                 theme: ThemeLike = None,
-                 element: SizedElement = None,
-                 padding: SupportsInt = None,
-                 border_radius: SupportsInt = None,
-                 border_width: SupportsInt = None
+                 theme: Optional[ThemeLike] = None,
+                 element: Optional[Union[SizedElement, None]] = None,
+                 content_alignment: Optional[Alignment] = None,
+                 draw_background: Optional[bool] = None,
+                 border_radius: Optional[SupportsInt] = None,
+                 border_width: Optional[SupportsInt] = None,
+                 propagate_theme_change: Optional[bool] = None,
+                 padding: Optional[SupportsInt] = None,
                  ) -> None:
-        if element is None:
-            self._element = None
-        else:
-            self._element = self._parse_element(element)
-
-        ResizableElement.__init__(self, x, y, width, height)
-
         if theme is None:
             theme = load_default_theme()
 
-        ThemedElement.__init__(self, theme=theme)
-
-        if padding is None:
-            padding = constants.DEFAULT_CONTAINER_PADDING
-
-        self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
+        if draw_background is None:
+            draw_background = False
 
         if border_radius is None:
             border_radius = constants.DEFAULT_CONTAINER_BORDER_RADIUS
@@ -55,95 +41,148 @@ class Panel(ResizableElement, ThemedElement, Element, BorderedElement):
         if border_width is None:
             border_width = constants.DEFAULT_CONTAINER_BORDER_WIDTH
 
-        BorderedElement.__init__(self, border_radius=border_radius, border_width=border_width)
+        if propagate_theme_change is None:
+            propagate_theme_change = True
 
-        self._container_theme = self._theme.container_theme.copy()
+        SingleContainerElement.__init__(
+            self,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            element=element,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change
+        )
 
-    def _update_colors(self) -> None:
-        self._container_theme = self._theme.container_theme.copy()
+        if padding is None:
+            padding = constants.DEFAULT_CONTAINER_PADDING
 
-    def draw(self, surface: pygame.Surface) -> None:
-        # Draw background
-        pygame.draw.rect(surface, self._container_theme.base_color, self._rect, border_radius=self._border_radius)
+        self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
 
-        # Draw border
-        if self._border_width > 0:
-            pygame.draw.rect(surface, self._container_theme.border_color, self._rect, width=self._border_width, border_radius=self._border_radius)
+        if content_alignment is None:
+            content_alignment = Alignment.TOP_LEFT
 
-        if self._element is not None and isinstance(self._element, Element):
-            self._element.draw(surface)
+        self._content_alignment = self._parse_content_alignment(content_alignment)
 
-    def update(self, dt: float) -> None:
-        if self._element is not None and isinstance(self._element, Element):
-            self._element.update(dt)
+    def _parse_content_alignment(self, content_alignment: Optional[Alignment]) -> Alignment:
+        if not isinstance(content_alignment, Alignment):
+            raise ValueError(
+                f"content_alignment must be of type {Alignment.__name__}, not {type(content_alignment).__name__}")
 
-    def debug_draw(self, surface: pygame.Surface) -> None:
-        super().debug_draw(surface)
-
-        if self._element is not None and isinstance(self._element, Element):
-            self._element.debug_draw(surface)
-
-    def handle_event(self, event: pygame.event.Event) -> None:
-        if self._element is not None and isinstance(self._element, Element):
-            self._element.handle_event(event)
-
-    def _parse_element(self, element: SizedElement) -> SizedElement:
-        if not isinstance(element, SizedElement):
-            raise TypeError(f"Panel element must be of type 'SizedElement', not '{type(element)}'.")
-
-        return element
+        return content_alignment
 
     def _update_element_position(self) -> None:
-        if self._element is not None:
-            # Top left
-            element_x = self._x + self._padding
-            element_y = self._y + self._padding
-            self._element.pos = (element_x, element_y)
+        if self._element is None:
+            return
+
+        element_x, element_y = get_alignment_position(
+            alignment=self._content_alignment,
+            container_rect=self._rect,
+            element_rect=self._element.rect,
+            left_padding=self._padding,
+            right_padding=self._padding,
+            top_padding=self._padding,
+            bottom_padding=self._padding
+        )
+
+        self._element.pos = (element_x, element_y)
 
     def _update_element_size(self) -> None:
-        if self._element is not None:
-            occupied_width = self._element.width + self._padding * 2
-            occupied_height = self._element.height + self._padding * 2
+        if self._element is None:
+            return
 
-            if occupied_width > self._width or occupied_height > self._height:
-                # Resize panel to fit element with padding.
-                new_width = max(self._width, occupied_width)
-                new_height = max(self._height, occupied_height)
+        occupied_width = self._element.width + self._padding * 2
+        occupied_height = self._element.height + self._padding * 2
 
-                self._update_dimensions(new_width, new_height)
+        if occupied_width > self._width or occupied_height > self._height:
+            # Resize panel to fit element with padding.
+            new_width = max(self._width, occupied_width)
+            new_height = max(self._height, occupied_height)
+
+            self._update_dimensions(new_width, new_height)
 
     def _update_dimensions(self, width: SupportsInt, height: SupportsInt) -> None:
         super()._update_dimensions(width, height)
-        self._update_element_size()
 
     def _update_position(self, x: SupportsInt, y: SupportsInt) -> None:
         super()._update_position(x, y)
-        self._update_element_position()
 
-    @property
-    def element(self) -> Optional[SizedElement]:
-        return self._element
+    def apply(self) -> None:
+        super().apply()
 
-    @element.setter
-    def element(self, element: SizedElement) -> None:
-        self._element = self._parse_element(element)
         self._update_element_position()
         self._update_element_size()
 
+    @property
+    def content_alignment(self) -> Alignment:
+        return self._content_alignment
 
+    @content_alignment.setter
+    def content_alignment(self, value: Alignment) -> None:
+        self._content_alignment = self._parse_content_alignment(value)
 
-class VBox(ContainerElement):
+        self.apply()
+
+    @property
+    def padding(self) -> int:
+        return self._padding
+
+    @padding.setter
+    def padding(self, value: int) -> None:
+        self._padding = ParsingTools.parse_non_negative_int(value, "padding")
+
+        self.apply()
+
+class VBox(MultiContainerElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
                  width: SupportsInt,
                  height: SupportsInt,
-                 elements: List[SizedElement] = None,
-                 padding: SupportsInt = None,
-                 spacing: SupportsInt = None,
-                 overflow_behavior: PerpendicularOverflowBehaviour = None,
+                 elements: Optional[Iterable[SizedElement]] = None,
+                 padding: Optional[SupportsInt] = None,
+                 spacing: Optional[SupportsInt] = None,
+                 draw_background: Optional[bool] = None,
+                 border_radius: Optional[SupportsInt] = None,
+                 border_width: Optional[SupportsInt] = None,
+                 theme: Optional[ThemeLike] = None,
+                 propagate_theme_change: Optional[bool] = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements)
+        if theme is None:
+            theme = load_default_theme()
+
+        if draw_background is None:
+            draw_background = False
+
+        if border_radius is None:
+            border_radius = constants.DEFAULT_CONTAINER_BORDER_RADIUS
+
+        if border_width is None:
+            border_width = constants.DEFAULT_CONTAINER_BORDER_WIDTH
+
+        if propagate_theme_change is None:
+            propagate_theme_change = True
+
+        if elements is None:
+            elements = []
+
+        MultiContainerElement.__init__(
+            self,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            elements=elements,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change,
+        )
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
@@ -153,17 +192,6 @@ class VBox(ContainerElement):
 
         self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
         self._spacing = ParsingTools.parse_non_negative_int(spacing, "spacing")
-
-        if overflow_behavior is None:
-            overflow_behavior = PerpendicularOverflowBehaviour.FIXED
-
-        self._overflow_behavior = self._parse_overflow_behavior(overflow_behavior)
-
-    def _parse_overflow_behavior(self, overflow_behavior: PerpendicularOverflowBehaviour) -> PerpendicularOverflowBehaviour:
-        if not isinstance(overflow_behavior, PerpendicularOverflowBehaviour):
-            raise TypeError(f"overflow_behavior must be of type 'OverflowBehavior', not '{type(overflow_behavior)}'.")
-
-        return overflow_behavior
 
     def apply(self) -> None:
         super().apply()
@@ -197,22 +225,72 @@ class VBox(ContainerElement):
         if total_width == self._width:
             return
 
-        if self._overflow_behavior == PerpendicularOverflowBehaviour.EXPAND:
-            self._update_dimensions(total_width, self._height, apply=False)
+    @property
+    def padding(self) -> int:
+        return self._padding
 
+    @padding.setter
+    def padding(self, value: int) -> None:
+        self._padding = ParsingTools.parse_non_negative_int(value, "padding")
 
-class HBox(ContainerElement):
+        self.apply()
+
+    @property
+    def spacing(self) -> int:
+        return self._spacing
+
+    @spacing.setter
+    def spacing(self, value: int) -> None:
+        self._spacing = ParsingTools.parse_non_negative_int(value, "spacing")
+
+        self.apply()
+
+class HBox(MultiContainerElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
                  width: SupportsInt,
                  height: SupportsInt,
-                 elements: List[SizedElement] = None,
-                 padding: SupportsInt = None,
-                 spacing: SupportsInt = None,
-                 overflow_behavior: PerpendicularOverflowBehaviour = None,
+                 elements: Optional[Iterable[SizedElement]] = None,
+                 padding: Optional[SupportsInt] = None,
+                 spacing: Optional[SupportsInt] = None,
+                 draw_background: Optional[bool] = None,
+                 border_radius: Optional[SupportsInt] = None,
+                 border_width: Optional[SupportsInt] = None,
+                 theme: Optional[ThemeLike] = None,
+                 propagate_theme_change: Optional[bool] = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements)
+        if theme is None:
+            theme = load_default_theme()
+
+        if draw_background is None:
+            draw_background = False
+
+        if border_radius is None:
+            border_radius = constants.DEFAULT_CONTAINER_BORDER_RADIUS
+
+        if border_width is None:
+            border_width = constants.DEFAULT_CONTAINER_BORDER_WIDTH
+
+        if propagate_theme_change is None:
+            propagate_theme_change = True
+
+        if elements is None:
+            elements = []
+
+        MultiContainerElement.__init__(
+            self,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            elements=elements,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change,
+        )
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
@@ -222,17 +300,6 @@ class HBox(ContainerElement):
 
         self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
         self._spacing = ParsingTools.parse_non_negative_int(spacing, "spacing")
-
-        if overflow_behavior is None:
-            overflow_behavior = PerpendicularOverflowBehaviour.FIXED
-
-        self._overflow_behavior = self._parse_overflow_behavior(overflow_behavior)
-
-    def _parse_overflow_behavior(self, overflow_behavior: PerpendicularOverflowBehaviour) -> PerpendicularOverflowBehaviour:
-        if not isinstance(overflow_behavior, PerpendicularOverflowBehaviour):
-            raise TypeError(f"overflow_behavior must be of type 'OverflowBehavior', not '{type(overflow_behavior)}'.")
-
-        return overflow_behavior
 
     def apply(self) -> None:
         super().apply()
@@ -266,24 +333,85 @@ class HBox(ContainerElement):
         if total_height == self._height:
             return
 
-        if self._overflow_behavior == PerpendicularOverflowBehaviour.EXPAND:
-            self._update_dimensions(self._width, total_height, apply=False)
+    @property
+    def padding(self) -> int:
+        return self._padding
 
+    @padding.setter
+    def padding(self, value: int) -> None:
+        self._padding = ParsingTools.parse_non_negative_int(value, "padding")
 
-class Grid(ContainerElement):
+        self.apply()
+
+    @property
+    def spacing(self) -> int:
+        return self._spacing
+
+    @spacing.setter
+    def spacing(self, value: int) -> None:
+        self._spacing = ParsingTools.parse_non_negative_int(value, "spacing")
+
+        self.apply()
+
+class UniformGrid(MultiContainerElement):
     def __init__(self,
                  x: SupportsInt,
                  y: SupportsInt,
                  width: SupportsInt,
                  height: SupportsInt,
-                 elements: List[SizedElement] = None,
-                 columns: SupportsInt = None,
-                 row_height: SupportsInt = None,
-                 padding: SupportsInt = None,
-                 spacing: SupportsInt = None,
-                 fill_order: GridFillOrder = None,
+                 elements: Optional[List[SizedElement]] = None,
+                 rows: Optional[SupportsInt] = None,
+                 columns: Optional[SupportsInt] = None,
+                 padding: Optional[SupportsInt] = None,
+                 spacing: Optional[SupportsInt] = None,
+                 content_alignment: Optional[Alignment] = None,
+                 draw_background: Optional[bool] = None,
+                 border_radius: Optional[SupportsInt] = None,
+                 border_width: Optional[SupportsInt] = None,
+                 theme: Optional[ThemeLike] = None,
+                 propagate_theme_change: Optional[bool] = None,
+                 fill_order: Optional[GridFillOrder] = None,
                  ) -> None:
-        super().__init__(x, y, width, height, elements)
+        if theme is None:
+            theme = load_default_theme()
+
+        if draw_background is None:
+            draw_background = False
+
+        if border_radius is None:
+            border_radius = constants.DEFAULT_CONTAINER_BORDER_RADIUS
+
+        if border_width is None:
+            border_width = constants.DEFAULT_CONTAINER_BORDER_WIDTH
+
+        if propagate_theme_change is None:
+            propagate_theme_change = True
+
+        if elements is None:
+            elements = []
+
+        if rows is None:
+            rows = 2
+
+        if columns is None:
+            columns = 2
+
+        self._rows = ParsingTools.parse_non_negative_int(rows, "rows")
+        self._columns = ParsingTools.parse_non_negative_int(columns, "columns")
+
+        MultiContainerElement.__init__(
+            self,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            theme=theme,
+            elements=elements,
+            draw_background=draw_background,
+            border_radius=border_radius,
+            border_width=border_width,
+            propagate_theme_change=propagate_theme_change,
+        )
 
         if padding is None:
             padding = constants.DEFAULT_CONTAINER_PADDING
@@ -294,48 +422,34 @@ class Grid(ContainerElement):
         self._padding = ParsingTools.parse_non_negative_int(padding, "padding")
         self._spacing = ParsingTools.parse_non_negative_int(spacing, "spacing")
 
-        if columns is None:
-            columns = 1
-
-        self._columns = self._parse_columns(columns)
-
         if fill_order is None:
-            fill_order = GridFillOrder.ROW_MAJOR
+            fill_order = GridFillOrder.ROW_FIRST
 
         self._fill_order = self._parse_fill_order(fill_order)
 
-        self._column_width = self._calculate_column_width()
+        if content_alignment is None:
+            content_alignment = Alignment.TOP_LEFT
 
-        if row_height is None:
-            row_height = self._column_width
+        self._content_alignment = self._parse_content_alignment(content_alignment)
 
-        self._row_height = ParsingTools.parse_non_negative_int(row_height, "row_height")
-
-    def _calculate_column_width(self) -> int:
-        total_spacing = self._spacing * (self._columns - 1)
-        total_padding = self._padding * 2
-
-        available_width = self._width - total_spacing - total_padding
-        column_width = available_width // self._columns
-
-        return column_width
-
-    def _parse_fill_order(self, fill_order: GridFillOrder) -> GridFillOrder:
+    @staticmethod
+    def _parse_fill_order(fill_order: GridFillOrder) -> GridFillOrder:
         if not isinstance(fill_order, GridFillOrder):
-            raise TypeError(f"fill_order must be of type 'GridFillOrder', not '{type(fill_order)}'.")
+            raise ValueError(f"fill_order must be an instance of GridFillOrder, not {type(fill_order)}")
 
         return fill_order
 
-    def _parse_columns(self, columns: SupportsInt) -> int:
-        if not hasattr(columns, "__int__"):
-            raise TypeError(f"columns must be of type 'int' or support __int__ conversion, not '{type(columns)}'.")
+    def _get_grid_positions(self) -> List[Tuple[int, int]]:
+        if self._fill_order == GridFillOrder.ROW_FIRST:
+            return [(row, col) for row in range(self._rows) for col in range(self._columns)]
+        else:
+            return [(row, col) for col in range(self._columns) for row in range(self._rows)]
 
-        columns_int = int(columns)
+    def _calculate_cell_size(self) -> Tuple[int, int]:
+        cell_width = (self._width - self._padding * 2 - self._spacing * (self._columns - 1)) // self._columns
+        cell_height = (self._height - self._padding * 2 - self._spacing * (self._rows - 1)) // self._rows
 
-        if columns_int <= 0:
-            raise ValueError("columns must be greater than 0.")
-
-        return columns_int
+        return cell_width, cell_height
 
     def apply(self) -> None:
         super().apply()
@@ -343,36 +457,119 @@ class Grid(ContainerElement):
         if len(self._elements) == 0:
             return
 
-        for index, element in enumerate(self.elements):
-            if self._fill_order == GridFillOrder.ROW_MAJOR:
-                # Row major: fill rows first, then columns.
-                row = index // self._columns
-                column = index % self._columns
-            else:
-                rows = math.ceil(len(self._elements) / self._columns)
+        cell_width, cell_height = self._calculate_cell_size()
+        grid_positions = self._get_grid_positions()
 
-                # Column major: fill columns first, then rows.
-                column = index // rows
-                row = index % rows
+        if len(self._elements) > self._rows * self._columns:
+            raise ValueError(
+                f"Grid capacity exceeded: {len(self._elements)} elements cannot fit in a {self._rows}x{self._columns}={self._rows * self._columns} grid"
+            )
 
-            # TOP LEFT
-            x = self._x + self._padding + column * (self._column_width + self._spacing)
-            y = self._y + self._padding + row * (self._row_height + self._spacing)
 
-            element.pos = (x, y)
+
+        for (row, col), element in zip(grid_positions, self.elements):
+            cell_x = self._x + self._padding + col * (cell_width + self._spacing)
+            cell_y = self._y + self._padding + row * (cell_height + self._spacing)
+
+            # Calculate element position based on content alignment.
+            cell_rect = pygame.Rect(cell_x, cell_y, cell_width, cell_height)
+
+            element_pos = get_alignment_position(
+                alignment=self._content_alignment,
+                container_rect=cell_rect,
+                element_rect=element.rect,
+                left_padding=0,
+                right_padding=0,
+                top_padding=0,
+                bottom_padding=0
+            )
+
+            element.pos = element_pos
+
 
     def debug_draw(self, surface: pygame.Surface) -> None:
         super().debug_draw(surface)
 
-        # Draw column lines.
-        for i in range(1, self._columns):
-            x = self._x + self._padding + i * (self._column_width + self._spacing) - self._spacing // 2
-            pygame.draw.line(surface, (0, 127, 255), (x, self._y + self._padding),
-                             (x, self._y + self._height - self._padding), 1)
+        cell_width, cell_height = self._calculate_cell_size()
 
-        # Draw row lines.
-        rows = math.ceil(len(self._elements) / self._columns)
-        for i in range(1, rows):
-            y = self._y + self._padding + i * (self._row_height + self._spacing) - self._spacing // 2
-            pygame.draw.line(surface, (0, 127, 255), (self._x + self._padding, y),
-                             (self._x + self._width - self._padding, y), 1)
+        for row in range(self._rows):
+            for col in range(self._columns):
+                cell_x = self._x + self._padding + col * (cell_width + self._spacing)
+                cell_y = self._y + self._padding + row * (cell_height + self._spacing)
+
+                pygame.draw.rect(
+                    surface,
+                    (255, 0, 0),
+                    (cell_x, cell_y, cell_width, cell_height),
+                    1
+                )
+
+    @staticmethod
+    def _parse_content_alignment(content_alignment: Optional[Alignment]) -> Alignment:
+        if not isinstance(content_alignment, Alignment):
+            raise ValueError(
+                f"content_alignment must be of type {Alignment.__name__}, not {type(content_alignment).__name__}"
+            )
+
+        return content_alignment
+
+    @property
+    def padding(self) -> int:
+        return self._padding
+
+    @padding.setter
+    def padding(self, value: int) -> None:
+        self._padding = ParsingTools.parse_non_negative_int(value, "padding")
+
+        self.apply()
+
+    @property
+    def spacing(self) -> int:
+        return self._spacing
+
+    @spacing.setter
+    def spacing(self, value: int) -> None:
+        self._spacing = ParsingTools.parse_non_negative_int(value, "spacing")
+
+        self.apply()
+
+
+    @property
+    def fill_order(self) -> GridFillOrder:
+        return self._fill_order
+
+    @fill_order.setter
+    def fill_order(self, value: GridFillOrder) -> None:
+        self._fill_order = self._parse_fill_order(value)
+
+        self.apply()
+
+    @property
+    def content_alignment(self) -> Alignment:
+        return self._content_alignment
+
+    @content_alignment.setter
+    def content_alignment(self, value: Alignment) -> None:
+        self._content_alignment = self._parse_content_alignment(value)
+
+        self.apply()
+
+    @property
+    def rows(self) -> int:
+        return self._rows
+
+    @rows.setter
+    def rows(self, value: int) -> None:
+        self._rows = ParsingTools.parse_non_negative_int(value, "rows")
+
+        self.apply()
+
+    @property
+    def columns(self) -> int:
+        return self._columns
+
+    @columns.setter
+    def columns(self, value: int) -> None:
+        self._columns = ParsingTools.parse_non_negative_int(value, "columns")
+
+        self.apply()

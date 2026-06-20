@@ -21,10 +21,32 @@ class ExampleContainer(ExampleBase):
 
         self._container_box = buttonup.VBox(
             x=50, y=50, width=200, height=370, padding=10, spacing=10,
-            overflow_behavior=buttonup.container.PerpendicularOverflowBehaviour.FIXED
+        )
+        self._grid_box = buttonup.UniformGrid(
+            x=300, y=50, width=240, height=240, rows=4, columns=4, padding=0, spacing=0,
+            content_alignment=buttonup.Alignment.CENTER,
+            fill_order=buttonup.GridFillOrder.COLUMN_FIRST
         )
 
-        self.generate_elements()
+        colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255))
+
+        for i in range(9):
+            rectangle = Rectangle(
+                x=0, y=0, width=60, height=60,
+                color=colors[i % len(colors)]
+            )
+            self._grid_box.add(rectangle)
+
+        self._grid_box.apply()
+
+        self._panel = buttonup.Panel(
+            x=600, y=50, width=150, height=150, padding=10,
+            draw_background=True, element=Rectangle(0, 0, 100, 30, (255, 0, 0)),
+            content_alignment=buttonup.Alignment.CENTER_RIGHT
+        )
+        self._panel.apply()
+
+        # self.generate_elements()
         self._container_box.apply()
 
     def generate_elements(self) -> None:
@@ -39,9 +61,16 @@ class ExampleContainer(ExampleBase):
         surface.fill(self.theme.color.background)
         self._container_box.draw(surface)
         self._container_box.debug_draw(surface)
+        self._grid_box.draw(surface)
+        # self._grid_box.debug_draw(surface)
+        self._panel.draw(surface)
 
     def update(self, dt: float) -> None:
         self._container_box.update(dt)
+
+        # mouse_pos = pygame.mouse.get_pos()
+        # self._grid_box.width = max(mouse_pos[0] - self._grid_box.x, 0)
+        # self._grid_box.height = max(mouse_pos[1] - self._grid_box.y, 0)
 
     def handle_event(self, event: pygame.event.Event) -> None:
         pass

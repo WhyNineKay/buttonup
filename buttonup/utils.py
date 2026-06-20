@@ -44,6 +44,173 @@ class Axis(Enum):
     HORIZONTAL = auto()
     VERTICAL = auto()
 
+
+
+
+
+def _align_object_center(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.centerx - object_rect.width // 2,
+        container_rect.centery - object_rect.height // 2
+    )
+
+
+def _align_object_top_left(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.left + left_padding,
+        container_rect.top + top_padding
+    )
+
+
+def _align_object_top_right(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.right - object_rect.width - right_padding,
+        container_rect.top + top_padding
+    )
+
+
+def _align_object_bottom_left(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.left + left_padding,
+        container_rect.bottom - object_rect.height - bottom_padding
+    )
+
+
+def _align_object_bottom_right(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.right - object_rect.width - right_padding,
+        container_rect.bottom - object_rect.height - bottom_padding
+    )
+
+
+def _align_object_center_left(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.left + left_padding,
+        container_rect.centery - object_rect.height // 2
+    )
+
+
+def _align_object_center_right(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.right - object_rect.width - right_padding,
+        container_rect.centery - object_rect.height // 2
+    )
+
+
+def _align_object_top_center(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.centerx - object_rect.width // 2,
+        container_rect.top + top_padding
+    )
+
+
+def _align_object_bottom_center(
+    container_rect: pygame.Rect,
+    object_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    return (
+        container_rect.centerx - object_rect.width // 2,
+        container_rect.bottom - object_rect.height - bottom_padding
+    )
+
+
+ALIGNMENT_MAPPING = {
+    Alignment.CENTER: _align_object_center,
+    Alignment.TOP_LEFT: _align_object_top_left,
+    Alignment.TOP_RIGHT: _align_object_top_right,
+    Alignment.BOTTOM_LEFT: _align_object_bottom_left,
+    Alignment.BOTTOM_RIGHT: _align_object_bottom_right,
+    Alignment.CENTER_LEFT: _align_object_center_left,
+    Alignment.CENTER_RIGHT: _align_object_center_right,
+    Alignment.TOP_CENTER: _align_object_top_center,
+    Alignment.BOTTOM_CENTER: _align_object_bottom_center,
+}
+
+
+def get_alignment_position(
+    alignment: Alignment,
+    container_rect: pygame.Rect,
+    element_rect: pygame.Rect,
+    left_padding: int,
+    right_padding: int,
+    top_padding: int,
+    bottom_padding: int
+) -> Tuple[int, int]:
+    if alignment not in ALIGNMENT_MAPPING:
+        raise ValueError(f"Invalid alignment: {alignment}")
+
+    align_function = ALIGNMENT_MAPPING[alignment]
+
+    return align_function(
+        container_rect,
+        element_rect,
+        left_padding,
+        right_padding,
+        top_padding,
+        bottom_padding
+    )
+
+
 @dataclass
 class CallbackPackage:
     """Container for a callable with positional and keyword arguments.
