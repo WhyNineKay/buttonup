@@ -1,5 +1,6 @@
 import math
 import random
+from typing import List
 
 import pygame
 import buttonup
@@ -45,11 +46,38 @@ class ExampleLabel(ExampleBase):
         self.timer_seconds = 0.25
         self.text_eat_dir = -1
 
+        colors = (
+            (255, 0, 0),
+            (0, 255, 0),
+            (0, 0, 255),
+            (255, 255, 0)
+        )
+        color_rects = self.generate_color_rects()
+
+        self.color_rect_mapping = {}
+
+        for rect, color in zip(color_rects, colors):
+            self.color_rect_mapping[color] = rect
+
+    def generate_color_rects(self) -> List[pygame.Rect]:
+        rect_width = 10
+
+        return [
+            pygame.Rect(0, 0, rect_width, self.WINDOW_HEIGHT - rect_width),
+            pygame.Rect(0, self.WINDOW_HEIGHT - rect_width, self.WINDOW_WIDTH - rect_width, rect_width),
+            pygame.Rect(self.WINDOW_WIDTH - rect_width, rect_width, rect_width, self.WINDOW_HEIGHT - rect_width),
+            pygame.Rect(rect_width, 0, self.WINDOW_WIDTH - rect_width, rect_width)
+        ]
+
     def change_font(self) -> None:
         self.label.font = random.choice(self.fonts)
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((30, 30, 30))
+
+        for color, rect in self.color_rect_mapping.items():
+            pygame.draw.rect(surface, color, rect)
+
         self.label.draw(surface)
 
     def update(self, dt: float) -> None:
@@ -96,6 +124,21 @@ class ExampleLabel(ExampleBase):
                 self.text_eat_dir = 1
                 self.label.text += self.text_target[0]
                 self.text_target = self.text_target[1:]
+
+        # Set label color
+        for color, rect in self.color_rect_mapping.items():
+            rect: pygame.Rect
+
+            if rect.colliderect(self.label.rect):
+                if color == self.label.text_color:
+                    continue
+
+                self.update_label_color(color)
+                break
+
+    def update_label_color(self, color: buttonup.types.RGB) -> None:
+        self.label.text_color = color
+
 
     def handle_event(self, event: pygame.event.Event) -> None:
         pass
